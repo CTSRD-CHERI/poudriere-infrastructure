@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# PROVIDE: qemu_user_static
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+
+# Add the following lines to /etc/rc.conf to enable `qemu_user_static':
+#
+# qemu_user_static_enable="YES"
+#
+
+. /etc/rc.subr
+
+name=qemu_user_static
+rcvar=qemu_user_static_enable
+
+# read configuration and set defaults
+load_rc_config "$name"
+
+: ${qemu_user_static_enable:="NO"}
+
+BINMISCCTL=/usr/sbin/binmiscctl
+QEMU_DIR=/usr/local/bin
+QEMU_PREFIX=qemu-
+QEMU_SUFFIX=-static
+
+start_cmd=qemu_user_static_start
+stop_cmd=qemu_user_static_stop
+extra_commands=list
+list_cmd="${BINMISCCTL} list"
+
+qemu_user_static_start()
+{
+	# register riscv64 interpreter styled 'riscv64'
+	interpreter=${QEMU_DIR}/${QEMU_PREFIX}riscv64${QEMU_SUFFIX}
+	if [ -x "${interpreter}" ]; then
+		${BINMISCCTL} add riscv64 --interpreter "${interpreter}" \
+			--magic "\x7f\x45\x4c\x46\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xf3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" \
+			--mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00" \
+			--size 52 --set-enabled
+	else
+		echo "$0: interpreter ${interpreter} not found, cannot register."
+	fi
+	# register riscv64c interpreter styled 'riscv64c'
+	interpreter=${QEMU_DIR}/${QEMU_PREFIX}riscv64c${QEMU_SUFFIX}
+	if [ -x "${interpreter}" ]; then
+		# riscv64c has the EF_RISCV_CHERIABI flag.
+		${BINMISCCTL} add riscv64c --interpreter "${interpreter}" \
+			--magic "\x7f\x45\x4c\x46\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xf3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00" \
+			--mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00" \
+			--size 52 --set-enabled
+	else
+		echo "$0: interpreter ${interpreter} not found, cannot register."
+	fi
+}
+
+qemu_user_static_stop()
+{
+	${BINMISCCTL} remove riscv64
+	${BINMISCCTL} remove riscv64c
+}
+
+run_rc_command "$1"
