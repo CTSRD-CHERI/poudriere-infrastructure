@@ -1,0 +1,14 @@
+#!/bin/sh
+
+prog=$(basename "${0}")
+
+export LD_LIBRARY_PATH="/host/lib:/host/usr/lib"
+
+case "${prog}" in
+clang|clang++)
+	"/zdata/cheri/output/sdk/utils/cheribsd-riscv64-purecap-${prog}" --sysroot=/zdata/cheri/output/sdk/sysroot-riscv64-purecap "${@}"
+	;;
+*)
+	"/zdata/cheri/output/sdk/bin/${prog}" "${@}"
+	;;
+esac
