@@ -1,1 +1,2 @@
 qemu_user_static_enable="YES"
+qemu_user_static_riscv64c_flags="-interpreter /libexec/ld-cheri-elf.so.1"
