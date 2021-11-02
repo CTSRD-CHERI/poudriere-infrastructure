@@ -2,7 +2,7 @@
 
 prog=$(basename "${0}")
 
-export LD_LIBRARY_PATH="/host/lib:/host/usr/lib"
+export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 
 case "${prog}" in
 clang|clang++)

@@ -9,9 +9,10 @@ mount)
 	mkdir -p "${mntpath}/zdata/cheri/output"
 	mount -r -t nullfs /zdata/cheri/output "${mntpath}/zdata/cheri/output"
 
-	mkdir -p "${mntpath}/host/lib" "${mntpath}/host/usr/lib"
+	mkdir -p "${mntpath}/host/lib" "${mntpath}/host/usr/lib" "${mntpath}/host/usr/local/lib"
 	mount -r -t nullfs /lib "${mntpath}/host/lib"
 	mount -r -t nullfs /usr/lib "${mntpath}/host/usr/lib"
+	mount -r -t nullfs /usr/local/lib "${mntpath}/host/usr/local/lib"
 	;;
 *)
 	;;
