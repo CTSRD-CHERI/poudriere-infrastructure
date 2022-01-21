@@ -41,10 +41,10 @@ qemu_user_static_start()
 	else
 		echo "$0: interpreter ${interpreter} not found, cannot register."
 	fi
-	# register morello interpreter styled 'morello'
-	interpreter=${QEMU_DIR}/${QEMU_PREFIX}morello${QEMU_SUFFIX}
+	# register aarch64c interpreter styled 'aarch64c'
+	interpreter=${QEMU_DIR}/${QEMU_PREFIX}aarch64c${QEMU_SUFFIX}
 	if [ -x "${interpreter}" ]; then
-		${BINMISCCTL} add morello --interpreter "${interpreter}" \
+		${BINMISCCTL} add aarch64c --interpreter "${interpreter}" \
 		    --magic "\x7f\x45\x4c\x46\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00" \
 		    --mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00" \
 		    --size 52 --set-enabled
@@ -79,7 +79,7 @@ qemu_user_static_start()
 qemu_user_static_stop()
 {
 	${BINMISCCTL} remove aarch64
-	${BINMISCCTL} remove morello
+	${BINMISCCTL} remove aarch64c
 	${BINMISCCTL} remove riscv64
 	${BINMISCCTL} remove riscv64c
 }
