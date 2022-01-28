@@ -2,7 +2,7 @@
 
 # Poudriere infrastructure for CheriBSD packages.
 
-This repository includes files necessary to start a Poudriere host that can build and host CheriABI CheriBSD packages. At the moment, we focus only on CHERI-RISC-V.
+This repository includes files necessary to start a Poudriere host that can build and host CheriABI CheriBSD packages for Morello and CHERI-RISC-V.
 
 ## Installation
 
@@ -70,11 +70,16 @@ This repository includes files necessary to start a Poudriere host that can buil
    /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri bsd-user-qemu
    ```
 
-9. Build a pure-capability CHERI-RISC-V CheriBSD.
+9. Build a pure-capability CheriBSD.
 
-   ```
-   /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-riscv64-purecap
-   ```
+   * Morello:
+     ```
+     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-morello-purecap
+     ```
+   * For CHERI-RISC-V:
+     ```
+     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-riscv64-purecap
+     ```
 
 10. Clone the poudriere-infrastructure repository.
 
@@ -98,10 +103,16 @@ This repository includes files necessary to start a Poudriere host that can buil
 
 13. Move the pure-capability rtld aside to make space for an amd64 rtld.
 
-    ```
-    mv /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-cheri-elf.so.1
-    cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1
-    ```
+    * For Morello:
+      ```
+      mv /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-cheri-elf.so.1
+      cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1
+      ```
+    * For CHERI-RISC-V:
+      ```
+      mv /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-cheri-elf.so.1
+      cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1
+      ```
 
 14. Configure binmiscctl(8).
 
@@ -111,9 +122,14 @@ This repository includes files necessary to start a Poudriere host that can buil
 
 15. Create a jail.
 
-    ```
-    sudo poudriere jail -c -j cheribsd-riscv64-purecap -v 14.0-CURRENT -a riscv.riscv64c -m null -M /zdata/cheri/output/rootfs-riscv64-purecap
-    ```
+    * For Morello:
+      ```
+      sudo poudriere jail -c -j cheribsd-morello-purecap -v 14.0-CURRENT -a aarch64.aarch64c -m null -M /zdata/cheri/output/rootfs-morello-purecap
+      ```
+    * For CHERI-RISC-V:
+      ```
+      sudo poudriere jail -c -j cheribsd-riscv64-purecap -v 14.0-CURRENT -a riscv.riscv64c -m null -M /zdata/cheri/output/rootfs-riscv64-purecap
+      ```
 
 16. Create a ports tree.
 
@@ -138,15 +154,23 @@ This repository includes files necessary to start a Poudriere host that can buil
 
 18. Start a test package build.
 
-    ```
-    sudo poudriere bulk -j cheribsd-riscv64-purecap -p main ports-mgmt/pkg
-    ```
+    * For Morello:
+      ```
+      sudo poudriere bulk -j cheribsd-morello-purecap -p main ports-mgmt/pkg
+      ```
+    * For CHERI-RISC-V:
+      ```
+      sudo poudriere bulk -j cheribsd-riscv64-purecap -p main ports-mgmt/pkg
+      ```
 
 19. Open `http://<host>/` to observe a build status in your browser.
 
 20. Your package repository should be accessible with:
 
-    `pkg+http://<host>/packages/cheribsd-riscv64-purecap-main/`
+    * For Morello:
+      `pkg+http://<host>/packages/cheribsd-morello-purecap-main/`
+    * For CHERI-RISC-V:
+      `pkg+http://<host>/packages/cheribsd-riscv64-purecap-main/`
 
 ## Related repos
 
