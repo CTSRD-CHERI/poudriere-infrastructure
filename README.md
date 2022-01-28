@@ -130,7 +130,7 @@ This repository includes files necessary to start a Poudriere host that can buil
 
     * For Morello:
       ```
-      sudo poudriere jail -c -j cheribsd-morello-purecap -v 14.0-CURRENT -a aarch64.aarch64c -m null -M /zdata/cheri/output/rootfs-morello-purecap
+      sudo poudriere jail -c -j cheribsd-morello-purecap -v 14.0-CURRENT -a arm64.aarch64c -m null -M /zdata/cheri/output/rootfs-morello-purecap
       ```
     * For CHERI-RISC-V:
       ```
