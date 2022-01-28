@@ -1,0 +1,14 @@
+#!/bin/sh
+
+prog=$(basename "${0}")
+
+export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
+
+case "${prog}" in
+clang|clang++)
+	"/zdata/cheri/output/morello-sdk/utils/cheribsd-morello-purecap-${prog}" --sysroot=/zdata/cheri/output/morello-sdk/sysroot-morello-purecap "${@}"
+	;;
+*)
+	"/zdata/cheri/output/morello-sdk/bin/${prog}" "${@}"
+	;;
+esac
