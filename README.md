@@ -96,10 +96,16 @@ This repository includes files necessary to start a Poudriere host that can buil
 
 12. Copy jail files from this repository.
 
-    ```
-    cd /zdata/cheri/poudriere-infrastructure
-    cp -a zdata/cheri/output/jail /zdata/cheri/output/
-    ```
+    * For Morello:
+      ```
+      cd /zdata/cheri/poudriere-infrastructure
+      cp -a zdata/cheri/output/jail-morello-purecap /zdata/cheri/output/
+      ```
+    * For CHERI-RISC-V:
+      ```
+      cd /zdata/cheri/poudriere-infrastructure
+      cp -a zdata/cheri/output/jail-riscv64-purecap /zdata/cheri/output/
+      ```
 
 13. Move the pure-capability rtld aside to make space for an amd64 rtld.
 
