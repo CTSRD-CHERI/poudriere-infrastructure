@@ -93,6 +93,7 @@ This repository includes files necessary to start a Poudriere host that can buil
     cd /zdata/cheri/poudriere-infrastructure
     find etc usr -type f -o -type l | xargs -I % sudo ln -s "`realpath . `/%" "/%"
     ```
+    Examine ln(1) errors as some files might already exist. In such case, remove or move them aside, and execute the above command again.
 
 12. Copy jail files from this repository.
 
