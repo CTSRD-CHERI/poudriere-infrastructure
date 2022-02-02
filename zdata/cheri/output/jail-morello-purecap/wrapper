@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHERI_OUTPUT="${CHERI_OUTPUT}"
+CHERI_OUTPUT="/zdata/cheri/output"
 
 prog=$(basename "${0}")
 
