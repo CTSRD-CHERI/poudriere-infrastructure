@@ -182,5 +182,7 @@ This repository includes files necessary to start a Poudriere host that can buil
 ## Related repos
 
 * [CTSRD-CHERI/qemu](https://github.com/CTSRD-CHERI/qemu) ([qemu-cheri-bsd-user](https://github.com/CTSRD-CHERI/qemu/tree/qemu-cheri-bsd-user) branch);
+* [CTSRD-CHERI/cheribuild](https://github.com/CTSRD-CHERI/cheribuild) ([qemu-cheribsd-user](https://github.com/CTSRD-CHERI/cheribuild/tree/qemu-cheri-bsd-user) branch);
+* [CTSRD-CHERI/cheribsd](https://github.com/CTSRD-CHERI/cheribsd) ([cheriabi-packages](https://github.com/CTSRD-CHERI/cheribsd/tree/cheriabi-packages) branch);
 * [CTSRD-CHERI/freebsd-ports](https://github.com/CTSRD-CHERI/freebsd-ports);
 * [freebsd/poudriere](https://github.com/freebsd/poudriere).
