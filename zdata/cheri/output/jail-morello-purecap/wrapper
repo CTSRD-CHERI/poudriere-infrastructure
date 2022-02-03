@@ -4,15 +4,18 @@ CHERI_OUTPUT="/zdata/cheri/output"
 
 prog=$(basename "${0}")
 
+#
+# Use host binaries and libraries for native tools.
+#
+export PATH="${CHERI_OUTPUT}/morello-sdk/bin:${PATH}"
 export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
-
 #
 # Overwrite variables from usr/local/etc/poudriere.d/*-make.conf so that
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
 export LD="${CHERI_OUTPUT}/morello-sdk/bin/ld"
-HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/morello-sdk/sysroot-morello-purecap -fuse-ld=${LD} -target aarch64-unknown-freebsd14.0 -march=morello+c64 -mabi=purecap -femulated-tls"
+HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/morello-sdk/sysroot-morello-purecap -target aarch64-unknown-freebsd14.0 -march=morello+c64 -mabi=purecap -femulated-tls"
 export CC="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang ${HOST_CFLAGS}"
 export CPP="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang-cpp ${HOST_CFLAGS}"
 export CXX="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang++ ${HOST_CFLAGS}"
