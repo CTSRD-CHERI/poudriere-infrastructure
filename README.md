@@ -142,15 +142,15 @@ This repository includes files necessary to start a Poudriere host that can buil
 
     * If you don't want to modify ports:
       ```
-      sudo poudriere ports -c -p main -m git -U https://github.com/CTSRD-CHERI/freebsd-ports.git -B main
+      sudo poudriere ports -c -p main -m git -U https://github.com/CTSRD-CHERI/cheribsd-ports.git -B main
       ```
     * If you want to modify ports on your host, we recommend to clone a repository:
       ```
-      git clone git@github.com:CTSRD-CHERI/freebsd-ports.git /path/to/freebsd-ports
+      git clone git@github.com:CTSRD-CHERI/cheribsd-ports.git /path/to/cheribsd-ports
       ```
       and import it as a ports tree:
       ```
-      sudo poudriere ports -c -p main -m null -M /path/to/freebsd-ports
+      sudo poudriere ports -c -p main -m null -M /path/to/cheribsd-ports
       ```
 
 17. Start nginx to browse Poudriere reports.
@@ -184,5 +184,5 @@ This repository includes files necessary to start a Poudriere host that can buil
 * [CTSRD-CHERI/qemu](https://github.com/CTSRD-CHERI/qemu) ([qemu-cheri-bsd-user](https://github.com/CTSRD-CHERI/qemu/tree/qemu-cheri-bsd-user) branch);
 * [CTSRD-CHERI/cheribuild](https://github.com/CTSRD-CHERI/cheribuild) ([qemu-cheribsd-user](https://github.com/CTSRD-CHERI/cheribuild/tree/qemu-cheri-bsd-user) branch);
 * [CTSRD-CHERI/cheribsd](https://github.com/CTSRD-CHERI/cheribsd) ([cheriabi-packages](https://github.com/CTSRD-CHERI/cheribsd/tree/cheriabi-packages) branch);
-* [CTSRD-CHERI/freebsd-ports](https://github.com/CTSRD-CHERI/freebsd-ports);
+* [CTSRD-CHERI/cheribsd-ports](https://github.com/CTSRD-CHERI/cheribsd-ports);
 * [freebsd/poudriere](https://github.com/freebsd/poudriere).
