@@ -15,13 +15,18 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # execute utilities.
 #
 HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/morello-sdk/sysroot-morello-purecap -target aarch64-unknown-freebsd14.0 -march=morello+c64 -mabi=purecap -femulated-tls"
+export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
 export CC="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang ${HOST_CFLAGS}"
 export CPP="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang-cpp ${HOST_CFLAGS}"
 export CXX="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang++ ${HOST_CFLAGS}"
 export LD="${CHERI_OUTPUT}/morello-sdk/bin/ld"
 export NM="${CHERI_OUTPUT}/morello-sdk/bin/nm"
+export OBJCOPY="${CHERI_OUTPUT}/morello-sdk/bin/objcopy"
 export OBJDUMP="${CHERI_OUTPUT}/morello-sdk/bin/objdump"
+export RANLIB="${CHERI_OUTPUT}/morello-sdk/bin/ranlib"
+export SIZE="${CHERI_OUTPUT}/morello-sdk/bin/size"
 export STRINGS="${CHERI_OUTPUT}/morello-sdk/bin/strings"
+export STRIP="${CHERI_OUTPUT}/morello-sdk/bin/strip"
 
 case "${prog}" in
 clang)
