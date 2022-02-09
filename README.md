@@ -91,22 +91,16 @@ This repository includes files necessary to start a Poudriere host that can buil
 
     ```
     cd /zdata/cheri/poudriere-infrastructure
-    find etc usr -type f -o -type l | xargs -I % sudo ln -s "`realpath . `/%" "/%"
+    find etc usr -type f -o -type l | xargs -I % -S 1024 sudo sh -c 'mkdir -p "/$(dirname %)"; ln -s "$(realpath . )/%" "/%"'
     ```
     Examine ln(1) errors as some files might already exist. In such case, remove or move them aside, and execute the above command again.
 
 12. Copy jail files from this repository.
 
-    * For Morello:
-      ```
-      cd /zdata/cheri/poudriere-infrastructure
-      cp -a zdata/cheri/output/jail-morello-purecap /zdata/cheri/output/
-      ```
-    * For CHERI-RISC-V:
-      ```
-      cd /zdata/cheri/poudriere-infrastructure
-      cp -a zdata/cheri/output/jail-riscv64-purecap /zdata/cheri/output/
-      ```
+    ```
+    cd /zdata/cheri/poudriere-infrastructure
+    find zdata -type f -o -type l | xargs -I % -S 1024 sudo sh -c 'mkdir -p "/$(dirname "%")"; cp -a "%" "/%"'
+    ```
 
 13. Move the pure-capability rtld aside to make space for an amd64 rtld.
 
