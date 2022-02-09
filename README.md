@@ -74,7 +74,7 @@ This repository includes files necessary to start a Poudriere host that can buil
 
    * Morello:
      ```
-     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-morello-purecap
+     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd --morello-qemu/no-use-smbd sdk-morello-purecap
      ```
    * For CHERI-RISC-V:
      ```
