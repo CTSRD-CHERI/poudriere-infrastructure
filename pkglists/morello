@@ -9,6 +9,7 @@
 # The current list of requested packages is maintained on 
 # https://github.com/CTSRD-CHERI/poudriere-infrastructure/wiki/Package-backlog
 #
+
 # Currently Working Packages 17 March 2022 <- Keep this current!
 
 devel/cscope
@@ -23,7 +24,8 @@ x11-toolkits/wlroots
 x11-wm/sway
 
 # Non Working Packages
-
+# The following ports should be moved to the working list once 
+# they are proved to be working.
 
 # devel/bison
 # devel/cmake
