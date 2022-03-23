@@ -80,14 +80,20 @@ This repository includes files necessary to start a Poudriere host that can buil
      ```
      /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-riscv64-purecap
      ```
+     
+10. Update the built sysroot to be owned by root/wheel
+    ```
+    cd /zdata/cheri/output
+    sudo chown -R root rootfs-*
+    ```
 
-10. Clone the poudriere-infrastructure repository.
+11. Clone the poudriere-infrastructure repository.
 
     ```
     git clone https://github.com/CTSRD-CHERI/poudriere-infrastructure.git /zdata/cheri/poudriere-infrastructure
     ```
 
-11. Create symbolic links for configuration files from the poudriere-infrastructure repository.
+12. Create symbolic links for configuration files from the poudriere-infrastructure repository.
 
     ```
     cd /zdata/cheri/poudriere-infrastructure
@@ -95,14 +101,14 @@ This repository includes files necessary to start a Poudriere host that can buil
     ```
     Examine ln(1) errors as some files might already exist. In such case, remove or move them aside, and execute the above command again.
 
-12. Copy jail files from this repository.
+13. Copy jail files from this repository.
 
     ```
     cd /zdata/cheri/poudriere-infrastructure
     find zdata -type f -o -type l | xargs -I % -S 1024 sudo sh -c 'mkdir -p "/$(dirname "%")"; cp -a "%" "/%"'
     ```
 
-13. Move the pure-capability rtld aside to make space for an amd64 rtld.
+14. Move the pure-capability rtld aside to make space for an amd64 rtld.
 
     * For Morello:
       ```
@@ -115,13 +121,13 @@ This repository includes files necessary to start a Poudriere host that can buil
       cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1
       ```
 
-14. Configure binmiscctl(8).
+15. Configure binmiscctl(8).
 
     ```
     sudo service qemu_user_static start
     ```
 
-15. Create a jail.
+16. Create a jail.
 
     * For Morello:
       ```
@@ -132,7 +138,7 @@ This repository includes files necessary to start a Poudriere host that can buil
       sudo poudriere jail -c -j cheribsd-riscv64-purecap -v 14.0-CURRENT -a riscv.riscv64c -m null -M /zdata/cheri/output/rootfs-riscv64-purecap
       ```
 
-16. Create a ports tree.
+17. Create a ports tree.
 
     * If you don't want to modify ports:
       ```
@@ -147,13 +153,13 @@ This repository includes files necessary to start a Poudriere host that can buil
       sudo poudriere ports -c -p main -m null -M /path/to/cheribsd-ports
       ```
 
-17. Start nginx to browse Poudriere reports.
+18. Start nginx to browse Poudriere reports.
 
     ```
     sudo service nginx start
     ```
 
-18. Start a test package build.
+19. Start a test package build.
 
     * For Morello:
       ```
@@ -164,9 +170,9 @@ This repository includes files necessary to start a Poudriere host that can buil
       sudo poudriere bulk -j cheribsd-riscv64-purecap -p main ports-mgmt/pkg
       ```
 
-19. Open `http://<host>/` to observe a build status in your browser.
+20. Open `http://<host>/` to observe a build status in your browser.
 
-20. Your package repository should be accessible with:
+21. Your package repository should be accessible with:
 
     * For Morello:
       `pkg+http://<host>/packages/cheribsd-morello-purecap-main/`
