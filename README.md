@@ -81,10 +81,9 @@ This repository includes files necessary to start a Poudriere host that can buil
      /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-riscv64-purecap
      ```
      
-10. Update the built sysroot to be owned by root/wheel
+10. Update the built sysroot to be owned by root:wheel.
     ```
-    cd /zdata/cheri/output
-    sudo chown -R root rootfs-*
+    sudo chown -R root:wheel /zdata/cheri/output/rootfs-*
     ```
 
 11. Clone the poudriere-infrastructure repository.
