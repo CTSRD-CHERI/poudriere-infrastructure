@@ -113,7 +113,7 @@ EOF
 	echo
 	echo "You can find the new key in: ${_keydir}."
 	echo
-	echo "Remembert to add ${_keypath} to share/keys/pkg/trusted/ in CheriBSD."
+	echo "Remember to add ${_keypath} to share/keys/pkg/trusted/ in CheriBSD."
 }
 
 key_sign() {
