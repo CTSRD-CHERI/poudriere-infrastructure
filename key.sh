@@ -117,7 +117,7 @@ EOF
 }
 
 key_sign() {
-	local _checksum _signature
+	local _checksum _cert _signature
 
 	read -t 2 _checksum
 	if [ -z "${_checksum}" ]; then
@@ -130,11 +130,16 @@ key_sign() {
 		die "Unable to generate a signature."
 	fi
 
+	_cert=$(cat "${KEY_PUBLIC}")
+	if [ $? -ne 0 ]; then
+		die "Unable to read the latest public key."
+	fi
+
 	cat << EOF
 SIGNATURE
 ${_signature}
 CERT
-${KEY_PUBLIC}
+${_cert}
 END
 EOF
 }
