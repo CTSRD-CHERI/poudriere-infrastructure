@@ -126,7 +126,7 @@ key_sign() {
 
 	_signature=$(echo -n "${_checksum}" |
 	    openssl dgst -sign "${KEY_PRIVATE}" -sha256 -binary)
-	if [ $? -ne 0 ] || [ -z "${_signature}" ]; then
+	if [ $? -ne 0 ]; then
 		die "Unable to generate a signature."
 	fi
 
