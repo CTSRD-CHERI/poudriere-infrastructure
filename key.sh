@@ -117,31 +117,26 @@ EOF
 }
 
 key_sign() {
-	local _checksum _cert _signature
+	local _checksum
 
 	read -t 2 _checksum
 	if [ -z "${_checksum}" ]; then
 		die "Checksum cannot be empty."
 	fi
 
-	_signature=$(echo -n "${_checksum}" |
-	    openssl dgst -sign "${KEY_PRIVATE}" -sha256 -binary)
+	echo "SIGNATURE"
+	echo -n "${_checksum}" |
+	    openssl dgst -sign "${KEY_PRIVATE}" -sha256 -binary
 	if [ $? -ne 0 ]; then
 		die "Unable to generate a signature."
 	fi
-
-	_cert=$(cat "${KEY_PUBLIC}")
+	echo
+	echo "CERT"
+	cat "${KEY_PUBLIC}"
 	if [ $? -ne 0 ]; then
 		die "Unable to read the latest public key."
 	fi
-
-	cat << EOF
-SIGNATURE
-${_signature}
-CERT
-${_cert}
-END
-EOF
+	echo "END"
 }
 
 main() {
