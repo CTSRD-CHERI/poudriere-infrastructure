@@ -115,7 +115,7 @@ This repository includes files necessary to start a Poudriere host that can buil
 
     * For Morello (aarch64c):
       ```
-      mv /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-cheri-elf.so.1
+      mv /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-aarch64c-elf.so.1
       cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1
       ```
     * For Morello (aarch64):
@@ -125,7 +125,7 @@ This repository includes files necessary to start a Poudriere host that can buil
       ```
     * For CHERI-RISC-V (riscv64c):
       ```
-      mv /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-cheri-elf.so.1
+      mv /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-riscv64c-elf.so.1
       cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1
       ```
 
