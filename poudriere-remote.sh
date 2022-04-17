@@ -170,6 +170,29 @@ cheribuildcmd() {
 	    "${@}"
 }
 
+gitclonecmd() {
+	local _branch _name _path _repo
+
+	_name="${1}"
+	_repo="${2}"
+	_branch="${3}"
+	_path="${4}"
+
+	[ -n "${_name}" ] || die "Missing _name."
+	[ -n "${_repo}" ] || die "Missing _repo."
+	[ -n "${_branch}" ] || die "Missing _branch."
+	[ -n "${_path}" ] || die "Missing _path."
+
+	if sshcmd ls -d "${_path}/.git"; then
+		info "Updating previously cloned ${_name} in ${_path}."
+		check sshcmd git -C "${_path}" pull -fq
+	else
+		info "Cloning ${_name} into ${_path}."
+		check sshcmd git clone -q --single-branch \
+		    --branch "${_branch}" "${_repo}" "${_path}"
+	fi
+}
+
 dircreate() {
 	local _dir _filesystem
 
@@ -223,17 +246,14 @@ init() {
 		check sshcmd sudo pkg install -qy devel/git
 	fi
 
-	if sshcmd ls -d "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/.git" >/dev/null 2>&1; then
-		info "Updating previously cloned poudriere-infrastructure in ${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}."
-		check sshcmd git -C "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}" \
-		    pull -q
-	else
-		info "Cloning poudriere-infrastructure into ${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}."
-		check sshcmd git clone -q \
-		    --branch "${REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH}" \
-		    "${REMOTE_POUDRIEREINFRASTRUCTURE_REPO}" \
-		    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
-	fi
+	gitclonecmd "poudriere-infrastructure" \
+	    "${REMOTE_POUDRIEREINFRASTRUCTURE_REPO}" \
+	    "${REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH}" \
+	    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
+	gitclonecmd "cheribuild" \
+	    "${REMOTE_CHERIBUILD_REPO}" \
+	    "${REMOTE_CHERIBUILD_BRANCH}" \
+	    "${REMOTE_PATH_CHERIBUILD}"
 }
 
 init_local() {
@@ -246,15 +266,6 @@ init_local() {
 
 	info "Updating dependency packages."
 	check sudo pkg install -qy ${REMOTE_DEPS}
-
-	if [ -d "${REMOTE_PATH_CHERIBUILD}/.git" ]; then
-		info "Updating previously cloned cheribuild in ${REMOTE_PATH_CHERIBUILD}."
-		check git -C "${REMOTE_PATH_CHERIBUILD}" pull
-	else
-		info "Cloning cheribuild into ${REMOTE_PATH_CHERIBUILD}."
-		check git clone -q --branch "${REMOTE_CHERIBUILD_BRANCH}" \
-		    "${REMOTE_CHERIBUILD_REPO}" "${REMOTE_PATH_CHERIBUILD}"
-	fi
 
 	info "Rebuilding bsd-user-qemu."
 	check cheribuildcmd bsd-user-qemu
