@@ -2,205 +2,26 @@
 
 # Poudriere infrastructure for CheriBSD packages.
 
-This repository includes files necessary to start a Poudriere host that can build and host CheriABI and plain ABI CheriBSD packages for Morello and CHERI-RISC-V.
+This repository includes files necessary to bootstrap a Poudriere host that can build and host CheriABI and plain ABI CheriBSD packages for Morello and CHERI-RISC-V.
 
-## Installation
+## Automated package building
 
-1. Install [FreeBSD](https://www.freebsd.org/where/) with an additional disk for a zpool (let's call it mydisk0).
+[poudriere-remote.sh](poudriere-remote.sh) allows to bootstrap a package building environment for a selected [cheribuild](https://github.com/CTSRD-CHERI/cheribuild) OS target and build packages using a [CheriBSD ports tree](https://github.com/CTSRD-CHERI/cheribsd-ports).
 
-   We tested [a VMDK snapshot image for amd64 14.0-CURRENT](https://download.freebsd.org/ftp/snapshots/VM-IMAGES/14.0-CURRENT/amd64/Latest/FreeBSD-14.0-CURRENT-amd64.vmdk.xz).
+This script requires root access via sudo to a remote host and should only be used with hosts created specifically for package building purposes.
 
-2. Create a user (let's call it myuser) and log in the host as the user.
+## Manual package building
 
-2. Create a zpool zdata.
+You can create a Poudriere environment without [poudriere-remote.sh](poudriere-remote.sh). Read more on manual configuration [here](https://github.com/CTSRD-CHERI/poudriere-infrastructure/wiki/Host-configuration).
 
-   ```
-   sudo zpool create zdata mydisk0
-   ```
+## Package signing
 
-3. Create file systems for CHERI and Poudriere.
-
-   ```
-   sudo zfs create zdata/cheri
-   sudo zfs create zdata/distfiles
-   sudo zfs create zdata/poudriere
-   ```
-
-4. Set the owner of new directories to your user.
-
-   ```
-   sudo chown myuser /zdata/cheri /zdata/distfiles /zdata/poudriere
-   ```
-
-5. Install cheribuild dependencies.
-
-   ```
-   sudo pkg install \
-       autoconf \
-       automake \
-       bash \
-       cmake \
-       git \
-       glib \
-       gmake \
-       gsed \
-       libtool \
-       ninja \
-       pixman \
-       pkgconf \
-       python3 \
-       texinfo
-   ```
-
-6. Install Poudriere dependencies.
-
-   ```
-   sudo pkg install poudriere nginx
-   ```
-
-7. Clone cheribuild with the user mode support.
-
-   ```
-   git clone --branch qemu-cheri-bsd-user https://github.com/CTSRD-CHERI/cheribuild.git /zdata/cheri/cheribuild
-   ```
-
-8. Build the CheriABI BSD user mode.
-
-   ```
-   /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri bsd-user-qemu
-   ```
-
-9. Build a pure-capability CheriBSD.
-
-   * Morello (aarch64c):
-     ```
-     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd --morello-qemu/no-use-smbd sdk-morello-purecap
-     ```
-   * Morello (aarch64):
-     ```
-     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd --morello-qemu/no-use-smbd sdk-aarch64
-     ```
-   * For CHERI-RISC-V (riscv64c):
-     ```
-     /zdata/cheri/cheribuild/cheribuild.py --source-root /zdata/cheri --no-skip-sdk --qemu/no-use-smbd sdk-riscv64-purecap
-     ```
-     
-10. Update the built sysroot to be owned by root:wheel.
-    ```
-    sudo chown -R root:wheel /zdata/cheri/output/rootfs-*
-    ```
-
-11. Clone the poudriere-infrastructure repository.
-
-    ```
-    git clone https://github.com/CTSRD-CHERI/poudriere-infrastructure.git /zdata/cheri/poudriere-infrastructure
-    ```
-
-12. Create symbolic links for configuration files from the poudriere-infrastructure repository.
-
-    ```
-    cd /zdata/cheri/poudriere-infrastructure
-    find etc usr -type f -o -type l | xargs -I % -S 1024 sudo sh -c 'mkdir -p "/$(dirname %)"; ln -s "$(realpath . )/%" "/%"'
-    ```
-    Examine ln(1) errors as some files might already exist. In such case, remove or move them aside, and execute the above command again.
-
-13. Copy jail files from this repository.
-
-    ```
-    cd /zdata/cheri/poudriere-infrastructure
-    find zdata -type f -o -type l | xargs -I % -S 1024 sudo sh -c 'mkdir -p "/$(dirname "%")"; cp -a "%" "/%"'
-    ```
-
-14. Move the pure-capability rtld aside to make space for an amd64 rtld.
-
-    * For Morello (aarch64c):
-      ```
-      mv /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-aarch64c-elf.so.1
-      cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-morello-purecap/libexec/ld-elf.so.1
-      ```
-    * For Morello (aarch64):
-      ```
-      mv /zdata/cheri/output/rootfs-aarch64/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-aarch64/libexec/ld-aarch64-elf.so.1
-      cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-aarch64/libexec/ld-elf.so.1
-      ```
-    * For CHERI-RISC-V (riscv64c):
-      ```
-      mv /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-riscv64c-elf.so.1
-      cp /libexec/ld-elf.so.1 /zdata/cheri/output/rootfs-riscv64-purecap/libexec/ld-elf.so.1
-      ```
-
-15. Configure binmiscctl(8).
-
-    ```
-    sudo service qemu_user_static start
-    ```
-
-16. Create a jail.
-
-    * For Morello (aarch64c):
-      ```
-      sudo poudriere jail -c -j cheribsd-morello-purecap -v 14.0-CURRENT -a arm64.aarch64c -m null -M /zdata/cheri/output/rootfs-morello-purecap
-      ```
-    * For Morello (aarch64):
-      ```
-      sudo poudriere jail -c -j cheribsd-aarch64 -v 14.0-CURRENT -a arm64.aarch64 -m null -M /zdata/cheri/output/rootfs-aarch64
-      ```
-    * For CHERI-RISC-V (riscv64c):
-      ```
-      sudo poudriere jail -c -j cheribsd-riscv64-purecap -v 14.0-CURRENT -a riscv.riscv64c -m null -M /zdata/cheri/output/rootfs-riscv64-purecap
-      ```
-
-17. Create a ports tree.
-
-    * If you don't want to modify ports:
-      ```
-      sudo poudriere ports -c -p main -m git -U https://github.com/CTSRD-CHERI/cheribsd-ports.git -B main
-      ```
-    * If you want to modify ports on your host, we recommend to clone a repository:
-      ```
-      git clone git@github.com:CTSRD-CHERI/cheribsd-ports.git /path/to/cheribsd-ports
-      ```
-      and import it as a ports tree:
-      ```
-      sudo poudriere ports -c -p main -m null -M /path/to/cheribsd-ports
-      ```
-
-18. Start nginx to browse Poudriere reports.
-
-    ```
-    sudo service nginx start
-    ```
-
-19. Start a test package build.
-
-    * For Morello (aarch64c):
-      ```
-      sudo poudriere bulk -j cheribsd-morello-purecap -p main ports-mgmt/pkg
-      ```
-    * For Morello (aarch64):
-      ```
-      sudo poudriere bulk -j cheribsd-aarch64 -p main ports-mgmt/pkg
-      ```
-    * For CHERI-RISC-V (riscv64c):
-      ```
-      sudo poudriere bulk -j cheribsd-riscv64-purecap -p main ports-mgmt/pkg
-      ```
-
-20. Open `http://<host>/` to observe a build status in your browser.
-
-21. Your package repository should be accessible with:
-
-    * For Morello (aarch64c):
-      `pkg+http://<host>/packages/cheribsd-morello-purecap-main/`
-    * For Morello (aarch64):
-      `pkg+http://<host>/packages/cheribsd-aarch64-main/`
-    * For CHERI-RISC-V (riscv64c):
-      `pkg+http://<host>/packages/cheribsd-riscv64-purecap-main/`
+[key.sh](key.sh) allows to generate a signing key and sign a package repository built by Poudriere using a separate package signing host.
 
 ## Related repos
 
 * [CTSRD-CHERI/qemu](https://github.com/CTSRD-CHERI/qemu) ([qemu-cheri-bsd-user](https://github.com/CTSRD-CHERI/qemu/tree/qemu-cheri-bsd-user) branch);
 * [CTSRD-CHERI/cheribuild](https://github.com/CTSRD-CHERI/cheribuild) ([qemu-cheribsd-user](https://github.com/CTSRD-CHERI/cheribuild/tree/qemu-cheri-bsd-user) branch);
-* [CTSRD-CHERI/cheribsd](https://github.com/CTSRD-CHERI/cheribsd) ([cheriabi-packages](https://github.com/CTSRD-CHERI/cheribsd/tree/cheriabi-packages) branch);
+* [CTSRD-CHERI/cheribsd](https://github.com/CTSRD-CHERI/cheribsd) ([dev](https://github.com/CTSRD-CHERI/cheribsd/tree/dev) branch);
 * [CTSRD-CHERI/cheribsd-ports](https://github.com/CTSRD-CHERI/cheribsd-ports);
 * [freebsd/poudriere](https://github.com/freebsd/poudriere).
