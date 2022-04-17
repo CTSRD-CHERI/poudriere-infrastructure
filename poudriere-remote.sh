@@ -76,6 +76,7 @@ REMOTE_PATH_DISTFILES="${REMOTE_PATH_ZDATA}/ditfiles"
 REMOTE_PATH_POUDRIERE="${REMOTE_PATH_ZDATA}/poudriere"
 REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
 REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
+REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 REMOTE_PATH_ROOTFS_AARCH64="${REMOTE_PATH_OUTPUT}/rootfs-aarch64"
 REMOTE_PATH_ROOTFS_MORELLO_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-morello-purecap"
@@ -88,6 +89,10 @@ REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH="master"
 # Remote cheribuild configuration.
 REMOTE_CHERIBUILD_REPO="https://github.com/CTSRD-CHERI/cheribuild.git"
 REMOTE_CHERIBUILD_BRANCH="qemu-cheri-bsd-user"
+
+# Remote cheribsd configuration.
+REMOTE_CHERIBSD_REPO="https://github.com/CTSRD-CHERI/cheribsd.git"
+REMOTE_CHERIBSD_BRANCH="dev"
 
 # Remote cheribsd-ports configuration.
 REMOTE_CHERIBSDPORTS_REPO="https://github.com/CTSRD-CHERI/cheribsd-ports.git"
@@ -236,6 +241,7 @@ init() {
 	dircreate "${REMOTE_PATH_DISTFILES}"
 	dircreate "${REMOTE_PATH_CHERI}"
 	dircreate "${REMOTE_PATH_REPOS}"
+	dircreate "${REMOTE_PATH_CHERIBSD}"
 	dircreate "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 	dircreate "${REMOTE_PATH_POUDRIERE}"
 
@@ -254,6 +260,10 @@ init() {
 	    "${REMOTE_CHERIBUILD_REPO}" \
 	    "${REMOTE_CHERIBUILD_BRANCH}" \
 	    "${REMOTE_PATH_CHERIBUILD}"
+	gitclonecmd "cheribsd" \
+	    "${REMOTE_CHERIBSD_REPO}" \
+	    "${REMOTE_CHERIBSD_BRANCH}" \
+	    "${REMOTE_PATH_CHERIBSD}"
 }
 
 init_local() {
@@ -347,6 +357,8 @@ init_local() {
 	*)
 		die "Unexpected target ${_target}."
 	esac
+	_cheribuildflags="${_cheribuildflags} \
+	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD}"
 
 	if [ -d "${_rootfs}/libexec" ]; then
 		debug "Using previously built SDK for the target ${_target}."
