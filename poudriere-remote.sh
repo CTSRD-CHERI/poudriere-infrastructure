@@ -364,6 +364,17 @@ init_local() {
 		debug "Using previously built SDK for the target ${_target}."
 	else
 		info "Building SDK for the target ${_target}."
+		if [ -d "${_rootfs}" ]; then
+			# Set the owner of rootfs to an unprivileged user in
+			# case we must update any already existing files (e.g.,
+			# when rootfs was partially created due to a bug that is
+			# fixed now).
+			#
+			# cheribuild creates files as the uprivileged user but
+			# we later change their owner to root:wheel as required
+			# by the base system.
+			check sudo chown -R "${REMOTE_USER}:wheel" "${_rootfs}"
+		fi
 		check cheribuildcmd ${_cheribuildflags} "${_cheribuildtarget}"
 	fi
 
@@ -381,6 +392,8 @@ init_local() {
 		check cp /libexec/ld-elf.so.1 "${_rootfs}/libexec/ld-elf.so.1"
 	fi
 
+	# When running natively or emulated, CheriBSD base system requires base
+	# system files to be owned by root:wheel.
 	check sudo chown -R root:wheel "${_rootfs}"
 
 	sudo poudriere jail -i -j "${_target}" >/dev/null 2>&1
