@@ -73,6 +73,7 @@ REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
 REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
 REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
+REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
 REMOTE_PATH_ROOTFS_AARCH64="${REMOTE_PATH_OUTPUT}/rootfs-aarch64"
 REMOTE_PATH_ROOTFS_MORELLO_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-morello-purecap"
 REMOTE_PATH_ROOTFS_RISCV64_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-riscv64-purecap"
@@ -276,29 +277,25 @@ init_local() {
 	check cheribuildcmd bsd-user-qemu
 
 	info "Creating symlinks."
-	_files=$(cd "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}" &&
-	    find overlay/etc/ overlay/usr/ -type f -o -type l)
+	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
+	    find etc/ usr/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
 		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo ln -sf \
-		    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/${_file}" \
-		    "/${_file}"
+		check sudo ln -sf "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
 	info "Copying files."
-	_files=$(cd "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}" &&
-	    find overlay/zdata/ -type f -o -type l)
+	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
+	    find zdata/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
 		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo cp -a \
-		    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/${_file}" \
-		    "/${_file}"
+		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
 	info "Reconfiguring binary image activators."
