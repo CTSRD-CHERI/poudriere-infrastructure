@@ -282,7 +282,7 @@ init_local() {
 
 	info "Creating symlinks."
 	_files=$(cd "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}" &&
-	    find etc/ usr/ -type f -o -type l)
+	    find overlay/etc/ overlay/usr/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
 		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
 	fi
@@ -295,7 +295,7 @@ init_local() {
 
 	info "Copying files."
 	_files=$(cd "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}" &&
-	    find zdata/ -type f -o -type l)
+	    find overlay/zdata/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
 		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
 	fi
