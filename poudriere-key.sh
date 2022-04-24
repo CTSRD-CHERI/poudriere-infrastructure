@@ -2,14 +2,9 @@
 #
 # Copyright (c) 2022 Konrad Witaszczyk
 #
-# This software was developed by SRI International and the University of
-# Cambridge Computer Laboratory under DARPA/AFRL contract (FA8750-10-C-0237)
-# ("CTSRD"), as part of the DARPA CRASH research programme.
-#
-# This software was developed by SRI International and the University of
-# Cambridge Computer Laboratory (Department of Computer Science and
-# Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
-# DARPA SSITH research programme.
+# This software was developed by the University of Cambridge Department of
+# Computer Science and Technology with support from Innovate UK project 105694,
+# "Digital Security by Design (DSbD) Technology Platform Prototype".
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
