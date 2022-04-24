@@ -42,6 +42,7 @@
 
 # Dependencies to install on a remote host.
 REMOTE_DEPS="
+aarch64-binutils
 autoconf
 automake
 bash
