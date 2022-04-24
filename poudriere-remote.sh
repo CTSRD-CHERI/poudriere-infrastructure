@@ -28,9 +28,9 @@
 # SUCH DAMAGE.
 #
 
-# WARNING: This is script is intended to be used with a remote host dedicated to
-# build packages. It requires root access via sudo on your remote host, might
-# break that host and loose your data.
+# WARNING: This script is intended for use with a remote host dedicated to build
+# packages. It requires root access via sudo on the host, might break the host
+# and loose its data.
 #
 # Before you use this script, you must create the remote host and configure it:
 # 1. Configure sshd with SSH key authentication.
