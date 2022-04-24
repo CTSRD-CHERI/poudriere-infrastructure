@@ -29,6 +29,15 @@ stop_cmd=qemu_user_static_stop
 extra_commands=list
 list_cmd="${BINMISCCTL} list"
 
+binmiscctl_remove_if_exists()
+{
+	activator="${1}"
+
+	if ${BINMISCCTL} lookup "${activator}" >/dev/null 2>&1; then
+		${BINMISCCTL} remove "${activator}"
+	fi
+}
+
 qemu_user_static_start()
 {
 	# register aarch64 interpreter styled 'aarch64'
@@ -84,10 +93,10 @@ qemu_user_static_start()
 
 qemu_user_static_stop()
 {
-	${BINMISCCTL} remove aarch64
-	${BINMISCCTL} remove aarch64c
-	${BINMISCCTL} remove riscv64
-	${BINMISCCTL} remove riscv64c
+	binmiscctl_remove_if_exists aarch64
+	binmiscctl_remove_if_exists aarch64c
+	binmiscctl_remove_if_exists riscv64
+	binmiscctl_remove_if_exists riscv64c
 }
 
 run_rc_command "$1"
