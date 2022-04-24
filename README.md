@@ -2,7 +2,7 @@
 
 # Poudriere infrastructure for CheriBSD packages.
 
-This repository includes files necessary to bootstrap a Poudriere host that can build and host CheriABI and plain ABI CheriBSD packages for Morello and CHERI-RISC-V.
+This repository includes files necessary to bootstrap a Poudriere host that can build and host CheriABI and hybrid ABI CheriBSD packages for Morello and CHERI-RISC-V.
 
 ## Automated package building
 
@@ -21,7 +21,7 @@ You can create a Poudriere environment without [poudriere-remote.sh](poudriere-r
 ## Related repos
 
 * [CTSRD-CHERI/qemu](https://github.com/CTSRD-CHERI/qemu) ([qemu-cheri-bsd-user](https://github.com/CTSRD-CHERI/qemu/tree/qemu-cheri-bsd-user) branch);
-* [CTSRD-CHERI/cheribuild](https://github.com/CTSRD-CHERI/cheribuild) ([qemu-cheribsd-user](https://github.com/CTSRD-CHERI/cheribuild/tree/qemu-cheri-bsd-user) branch);
+* [CTSRD-CHERI/cheribuild](https://github.com/CTSRD-CHERI/cheribuild) ([qemu-cheri-bsd-user](https://github.com/CTSRD-CHERI/cheribuild/tree/qemu-cheri-bsd-user) branch);
 * [CTSRD-CHERI/cheribsd](https://github.com/CTSRD-CHERI/cheribsd) ([dev](https://github.com/CTSRD-CHERI/cheribsd/tree/dev) branch);
 * [CTSRD-CHERI/cheribsd-ports](https://github.com/CTSRD-CHERI/cheribsd-ports);
 * [freebsd/poudriere](https://github.com/freebsd/poudriere).
