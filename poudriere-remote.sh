@@ -171,7 +171,7 @@ sshcmd() {
 
 cheribuildcmd() {
 	"${REMOTE_PATH_CHERIBUILD}/cheribuild.py" \
-	    --source-root "${REMOTE_PATH_CHERI}" \
+	    --quiet --source-root "${REMOTE_PATH_CHERI}" \
 	    "${@}"
 }
 
@@ -188,7 +188,7 @@ gitclonecmd() {
 	[ -n "${_branch}" ] || die "Missing _branch."
 	[ -n "${_path}" ] || die "Missing _path."
 
-	if sshcmd ls -d "${_path}/.git"; then
+	if sshcmd ls -d "${_path}/.git" >/dev/null 2>&1; then
 		info "Updating previously cloned ${_name} in ${_path}."
 		check sshcmd git -C "${_path}" pull -fq
 	else
