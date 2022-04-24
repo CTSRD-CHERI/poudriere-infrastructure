@@ -45,7 +45,7 @@ die() {
 }
 
 usage() {
-	echo "usage: key.sh generate|sign"
+	echo "usage: ${0} generate|sign"
 }
 
 key_generate() {
