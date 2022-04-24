@@ -332,17 +332,6 @@ init_local() {
 		check sudo ln -sf "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
-	info "Copying files."
-	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
-	    find zdata/ -type f -o -type l)
-	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
-		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
-	fi
-	for _file in ${_files}; do
-		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
-	done
-
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
 		info "Reconfiguring binary image activators."
 		check sudo service qemu_user_static restart
@@ -379,6 +368,17 @@ init_local() {
 		fi
 		check cheribuildcmd ${_cheribuildflags} "${_cheribuildtarget}"
 	fi
+
+	info "Copying files."
+	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
+	    find zdata/ -type f -o -type l)
+	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
+		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
+	fi
+	for _file in ${_files}; do
+		check sudo mkdir -p "$(dirname "/${_file}")"
+		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
+	done
 
 	if [ -f "${_rootfs}/libexec/ld-${_machine_arch}.so.1" ]; then
 		debug "Using previously copied guest ld-${_machine_arch}.so.1."
