@@ -16,7 +16,7 @@ You can create a Poudriere environment without [poudriere-remote.sh](poudriere-r
 
 ## Package signing
 
-[key.sh](key.sh) allows to generate a signing key and sign a package repository built by Poudriere using a separate package signing host.
+[poudriere-key.sh](poudriere-key.sh) allows to generate a signing key and sign a package repository built by Poudriere using a separate package signing host.
 
 ## Related repos
 
