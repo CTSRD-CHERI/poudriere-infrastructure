@@ -264,57 +264,12 @@ init() {
 }
 
 init_local() {
-	local _cheribuildflags _cheribuildtarget _file _files _machine
-	local _machine_arch _rootfs _target
+	local _cheribuildflags _cheribuildtarget _file _files _host_machine_arch
+	local _machine _machine_arch _rootfs _target
 
 	_target="${1}"
 
 	[ -n "${_target}" ] || die "Missing _target."
-
-	info "Updating dependency packages."
-	check sudo pkg install -qy ${REMOTE_DEPS}
-
-	info "Rebuilding bsd-user-qemu."
-	check cheribuildcmd bsd-user-qemu
-
-	info "Creating symlinks."
-	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
-	    find etc/ usr/ -type f -o -type l)
-	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
-		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
-	fi
-	for _file in ${_files}; do
-		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo ln -sf "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
-	done
-
-	info "Copying files."
-	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
-	    find zdata/ -type f -o -type l)
-	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
-		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
-	fi
-	for _file in ${_files}; do
-		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
-	done
-
-	info "Reconfiguring binary image activators."
-	check sudo service qemu_user_static restart
-
-	info "Restarting nginx."
-	check sudo service nginx restart
-
-	sudo poudriere ports -l -n | grep "^${REMOTE_CHERIBSDPORTS_BRANCH}$"
-	if [ $? -eq 0 ]; then
-		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
-	else
-		info "Creating a ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
-		check sudo poudriere ports -c -m git \
-		    -p "${REMOTE_CHERIBSDPORTS_BRANCH}" \
-		    -U "${REMOTE_CHERIBSDPORTS_REPO}" \
-		    -B "${REMOTE_CHERIBSDPORTS_BRANCH}"
-	fi
 
 	case "${_target}" in
 	cheribsd-aarch64)
@@ -352,6 +307,60 @@ init_local() {
 	esac
 	_cheribuildflags="${_cheribuildflags} \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD}"
+
+	_host_machine_arch=$(check sudo uname -p)
+	if [ $? -ne 0 ]; then
+		die "Unable to get a host machine architecture."
+	fi
+
+	info "Updating dependency packages."
+	check sudo pkg install -qy ${REMOTE_DEPS}
+
+	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
+		info "Rebuilding bsd-user-qemu."
+		check cheribuildcmd bsd-user-qemu
+	fi
+
+	info "Creating symlinks."
+	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
+	    find etc/ usr/ -type f -o -type l)
+	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
+		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
+	fi
+	for _file in ${_files}; do
+		check sudo mkdir -p "$(dirname "/${_file}")"
+		check sudo ln -sf "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
+	done
+
+	info "Copying files."
+	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
+	    find zdata/ -type f -o -type l)
+	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
+		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
+	fi
+	for _file in ${_files}; do
+		check sudo mkdir -p "$(dirname "/${_file}")"
+		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
+	done
+
+	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
+		info "Reconfiguring binary image activators."
+		check sudo service qemu_user_static restart
+	fi
+
+	info "Restarting nginx."
+	check sudo service nginx restart
+
+	sudo poudriere ports -l -n | grep "^${REMOTE_CHERIBSDPORTS_BRANCH}$"
+	if [ $? -eq 0 ]; then
+		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
+	else
+		info "Creating a ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
+		check sudo poudriere ports -c -m git \
+		    -p "${REMOTE_CHERIBSDPORTS_BRANCH}" \
+		    -U "${REMOTE_CHERIBSDPORTS_REPO}" \
+		    -B "${REMOTE_CHERIBSDPORTS_BRANCH}"
+	fi
 
 	if [ -d "${_rootfs}/libexec" ]; then
 		debug "Using previously built SDK for the target ${_target}."
