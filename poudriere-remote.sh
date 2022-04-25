@@ -380,18 +380,20 @@ init_local() {
 		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
-	if [ -f "${_rootfs}/libexec/ld-${_machine_arch}.so.1" ]; then
-		debug "Using previously copied guest ld-${_machine_arch}.so.1."
-	else
-		info "Copying guest ld-elf.so.1 to ld-${_machine_arch}.so.1."
-		check mv "${_rootfs}/libexec/ld-elf.so.1" \
-		    "${_rootfs}/libexec/ld-${_machine_arch}.so.1"
-	fi
-	if [ -f "${_rootfs}/libexec/ld-elf.so.1" ]; then
-		debug "Using previously copied host ld-elf.so.1."
-	else
-		info "Copying host ld-elf.so.1."
-		check cp /libexec/ld-elf.so.1 "${_rootfs}/libexec/ld-elf.so.1"
+	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
+		if [ -f "${_rootfs}/libexec/ld-${_machine_arch}.so.1" ]; then
+			debug "Using previously copied guest ld-${_machine_arch}.so.1."
+		else
+			info "Copying guest ld-elf.so.1 to ld-${_machine_arch}.so.1."
+			check mv "${_rootfs}/libexec/ld-elf.so.1" \
+			    "${_rootfs}/libexec/ld-${_machine_arch}.so.1"
+		fi
+		if [ -f "${_rootfs}/libexec/ld-elf.so.1" ]; then
+			debug "Using previously copied host ld-elf.so.1."
+		else
+			info "Copying host ld-elf.so.1."
+			check cp /libexec/ld-elf.so.1 "${_rootfs}/libexec/ld-elf.so.1"
+		fi
 	fi
 
 	# When running natively or emulated, CheriBSD base system requires base
