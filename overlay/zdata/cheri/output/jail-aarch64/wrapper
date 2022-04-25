@@ -14,7 +14,7 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
-HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/rootfs-aarch64 -target aarch64-unknown-freebsd14.0 -march=morello+noa64c"
+HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/rootfs-aarch64 -target aarch64-unknown-freebsd14.0"
 export AR="${CHERI_OUTPUT}/sdk/bin/ar"
 export CC="${CHERI_OUTPUT}/sdk/bin/clang ${HOST_CFLAGS}"
 export CPP="${CHERI_OUTPUT}/sdk/bin/clang-cpp ${HOST_CFLAGS}"
