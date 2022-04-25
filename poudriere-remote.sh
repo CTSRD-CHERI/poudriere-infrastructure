@@ -76,6 +76,7 @@ REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
 REMOTE_PATH_ROOTFS_AARCH64="${REMOTE_PATH_OUTPUT}/rootfs-aarch64"
+REMOTE_PATH_ROOTFS_MORELLO_HYBRID="${REMOTE_PATH_OUTPUT}/rootfs-morello-hybrid"
 REMOTE_PATH_ROOTFS_MORELLO_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-morello-purecap"
 REMOTE_PATH_ROOTFS_RISCV64_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-riscv64-purecap"
 
@@ -279,6 +280,14 @@ init_local() {
 		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd \
 		    --morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-aarch64"
+		;;
+	cheribsd-morello-hybrid)
+		_machine="arm64"
+		_machine_arch="aarch64"
+		_rootfs="${REMOTE_PATH_ROOTFS_MORELLO_HYBRID}"
+		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd \
+		    --morello-qemu/no-use-smbd"
+		_cheribuildtarget="sdk-morello-hybrid"
 		;;
 	cheribsd-morello-purecap)
 		_machine="arm64"
