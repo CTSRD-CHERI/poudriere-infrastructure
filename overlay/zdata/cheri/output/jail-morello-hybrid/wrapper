@@ -1,0 +1,48 @@
+#!/bin/sh
+
+CHERI_OUTPUT="/zdata/cheri/output"
+
+prog=$(basename "${0}")
+
+#
+# Use host binaries and libraries for native tools.
+#
+export PATH="${CHERI_OUTPUT}/morello-sdk/bin:${PATH}"
+export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
+#
+# Overwrite variables from usr/local/etc/poudriere.d/*-make.conf so that
+# subprocesses don't execute the user mode for shell again and instead directly
+# execute utilities.
+#
+HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/rootfs-morello-hybrid -target aarch64-unknown-freebsd14.0 -march=morello+a64c"
+export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
+export CC="${CHERI_OUTPUT}/morello-sdk/bin/clang ${HOST_CFLAGS}"
+export CPP="${CHERI_OUTPUT}/morello-sdk/bin/clang-cpp ${HOST_CFLAGS}"
+export CXX="${CHERI_OUTPUT}/morello-sdk/bin/clang++ ${HOST_CFLAGS}"
+export LD="${CHERI_OUTPUT}/morello-sdk/bin/ld"
+export NM="${CHERI_OUTPUT}/morello-sdk/bin/nm"
+export OBJCOPY="${CHERI_OUTPUT}/morello-sdk/bin/objcopy"
+export OBJDUMP="${CHERI_OUTPUT}/morello-sdk/bin/objdump"
+export RANLIB="${CHERI_OUTPUT}/morello-sdk/bin/ranlib"
+export SIZE="${CHERI_OUTPUT}/morello-sdk/bin/size"
+export STRINGS="${CHERI_OUTPUT}/morello-sdk/bin/strings"
+export STRIP="${CHERI_OUTPUT}/morello-sdk/bin/strip"
+export TAR="/host/usr/bin/tar"
+
+case "${prog}" in
+clang)
+	${CC} "${@}"
+	;;
+clang-cpp)
+	${CPP} "${@}"
+	;;
+clang++)
+	${CXX} "${@}"
+	;;
+tar)
+	"${TAR}" "${@}"
+	;;
+*)
+	"${CHERI_OUTPUT}/morello-sdk/bin/${prog}" "${@}"
+	;;
+esac
