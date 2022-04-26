@@ -335,7 +335,7 @@ init_local() {
 		check cheribuildcmd bsd-user-qemu
 	fi
 
-	info "Creating symlinks."
+	info "Copying configuration files."
 	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
 	    find etc/ usr/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
@@ -343,7 +343,7 @@ init_local() {
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo ln -sf "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
+		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
@@ -383,7 +383,7 @@ init_local() {
 		check cheribuildcmd ${_cheribuildflags} "${_cheribuildtarget}"
 	fi
 
-	info "Copying files."
+	info "Copying jail files."
 	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
 	    find zdata/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
