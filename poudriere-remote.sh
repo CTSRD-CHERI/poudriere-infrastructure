@@ -418,7 +418,7 @@ init_local() {
 		    -v "${REMOTE_JAIL_VERSION}" \
 		    -a "${_machine}.${_machine_arch}" \
 		    -m null \
-		    -M "${REMOTE_PATH_ROOTFS_AARCH64}"
+		    -M "${_rootfs}"
 	fi
 
 	if [ -f "${REMOTE_PATH_PACKAGES}/${_target}/Latest/pkg.pkg" ]; then
