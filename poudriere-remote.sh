@@ -284,7 +284,12 @@ init_local() {
 	cheribsd-morello-hybrid)
 		_machine="arm64"
 		_machine_arch="aarch64"
-		_rootfs="${REMOTE_PATH_ROOTFS_MORELLO_HYBRID}"
+		# Use an aarch64 world to build hybrid packages.
+		#
+		# We'd like to build natively most of the packages. The packages
+		# that we must build for the hybrid ABI can be built against
+		# an aarch64 world.
+		_rootfs="${REMOTE_PATH_ROOTFS_AARCH64}"
 		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd \
 		    --morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-morello-hybrid"
