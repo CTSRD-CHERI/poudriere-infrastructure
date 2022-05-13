@@ -561,7 +561,8 @@ build() {
 	# Execute the local part of the build command on a remote host.
 	#
 	# Don't use check() here as we might want to dry-run remote commands.
-	sshcmd sh "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/poudriere-remote.sh" \
+	sshcmd -t tmux new \
+	    sh "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/poudriere-remote.sh" \
 	    _build_local "${@}"
 }
 
