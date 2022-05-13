@@ -317,6 +317,7 @@ init_local() {
 		die "Unexpected target ${_target}."
 	esac
 	_cheribuildflags="${_cheribuildflags} \
+	    --clean \
 	    --no-skip-sdk \
 	    --qemu/no-use-smbd \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD}"
