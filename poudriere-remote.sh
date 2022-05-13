@@ -343,6 +343,7 @@ init_local() {
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
+		check sudo rm -f "/${_file}"
 		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
@@ -391,6 +392,7 @@ init_local() {
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
+		check sudo rm -f "/${_file}"
 		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
