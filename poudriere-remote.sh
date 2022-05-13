@@ -277,8 +277,7 @@ init_local() {
 		_machine="arm64"
 		_machine_arch="aarch64"
 		_rootfs="${REMOTE_PATH_ROOTFS_AARCH64}"
-		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd \
-		    --morello-qemu/no-use-smbd"
+		_cheribuildflags="--morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-aarch64"
 		;;
 	cheribsd-morello-hybrid)
@@ -290,36 +289,36 @@ init_local() {
 		# that we must build for the hybrid ABI can be built against
 		# an aarch64 world.
 		_rootfs="${REMOTE_PATH_ROOTFS_AARCH64}"
-		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd \
-		    --morello-qemu/no-use-smbd"
+		_cheribuildflags="--morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-morello-hybrid"
 		;;
 	cheribsd-morello-purecap)
 		_machine="arm64"
 		_machine_arch="aarch64c"
 		_rootfs="${REMOTE_PATH_ROOTFS_MORELLO_PURECAP}"
-		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd \
-		    --morello-qemu/no-use-smbd"
+		_cheribuildflags="--morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-morello-purecap"
 		;;
 	cheribsd-riscv64)
 		_machine="riscv64"
 		_machine_arch="riscv64"
 		_rootfs="${REMOTE_PATH_ROOTFS_RISCV64}"
-		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd"
+		_cheribuildflags=""
 		_cheribuildtarget="sdk-riscv64"
 		;;
 	cheribsd-riscv64-purecap)
 		_machine="riscv64"
 		_machine_arch="riscv64c"
 		_rootfs="${REMOTE_PATH_ROOTFS_RISCV64_PURECAP}"
-		_cheribuildflags="--no-skip-sdk --qemu/no-use-smbd"
+		_cheribuildflags=""
 		_cheribuildtarget="sdk-riscv64-purecap"
 		;;
 	*)
 		die "Unexpected target ${_target}."
 	esac
 	_cheribuildflags="${_cheribuildflags} \
+	    --no-skip-sdk \
+	    --qemu/no-use-smbd \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD}"
 
 	_host_machine_arch=$(check sudo uname -p)
