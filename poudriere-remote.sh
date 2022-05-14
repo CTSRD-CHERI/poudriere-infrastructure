@@ -289,7 +289,8 @@ init_local() {
 		# that we must build for the hybrid ABI can be built against
 		# an aarch64 world.
 		_rootfs="${REMOTE_PATH_ROOTFS_AARCH64}"
-		_cheribuildflags="--morello-qemu/no-use-smbd"
+		_cheribuildflags="--morello-qemu/no-use-smbd \
+		    --enable-hybrid-targets"
 		_cheribuildtarget="sdk-morello-hybrid"
 		;;
 	cheribsd-morello-purecap)
