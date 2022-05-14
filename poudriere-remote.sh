@@ -265,8 +265,8 @@ init() {
 }
 
 init_local() {
-	local _cheribuildflags _cheribuildtarget _file _files _host_machine_arch
-	local _machine _machine_arch _rootfs _target
+	local _cheribuildflags _cheribuildtarget _cheribuildstatus _file _files
+	local _host_machine_arch _machine _machine_arch _rootfs _target
 
 	_target="${1}"
 
@@ -321,6 +321,7 @@ init_local() {
 	    --no-skip-sdk \
 	    --qemu/no-use-smbd \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD}"
+	_cheribuildstatus="${REMOTE_PATH_OUTPUT}/.${_cheribuildtarget}.done"
 
 	_host_machine_arch=$(check sudo uname -p)
 	if [ $? -ne 0 ]; then
@@ -366,7 +367,7 @@ init_local() {
 		    -B "${REMOTE_CHERIBSDPORTS_BRANCH}"
 	fi
 
-	if [ -d "${_rootfs}/libexec" ]; then
+	if [ -f "${_cheribuildstatus}" ]; then
 		debug "Using previously built SDK for the target ${_target}."
 	else
 		info "Building SDK for the target ${_target}."
@@ -382,6 +383,7 @@ init_local() {
 			check sudo chown -R "${REMOTE_USER}:wheel" "${_rootfs}"
 		fi
 		check cheribuildcmd ${_cheribuildflags} "${_cheribuildtarget}"
+		check touch "${_cheribuildstatus}"
 	fi
 
 	info "Copying jail files."
