@@ -14,7 +14,7 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
-HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/morello-sdk/sysroot-morello-purecap -target aarch64-unknown-freebsd14.0 -march=morello+c64 -mabi=purecap -femulated-tls"
+HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/morello-sdk/sysroot-morello-purecap -target aarch64-unknown-freebsd14.0 -march=morello+c64 -mabi=purecap -Xclang -morello-vararg=new"
 export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
 export CC="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang ${HOST_CFLAGS}"
 export CPP="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang-cpp ${HOST_CFLAGS}"
