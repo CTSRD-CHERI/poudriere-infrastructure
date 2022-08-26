@@ -24,4 +24,4 @@ You can create a Poudriere environment without [poudriere-remote.sh](poudriere-r
 * [CTSRD-CHERI/cheribuild](https://github.com/CTSRD-CHERI/cheribuild) ([qemu-cheri-bsd-user](https://github.com/CTSRD-CHERI/cheribuild/tree/qemu-cheri-bsd-user) branch);
 * [CTSRD-CHERI/cheribsd](https://github.com/CTSRD-CHERI/cheribsd) ([dev](https://github.com/CTSRD-CHERI/cheribsd/tree/dev) branch);
 * [CTSRD-CHERI/cheribsd-ports](https://github.com/CTSRD-CHERI/cheribsd-ports);
-* [freebsd/poudriere](https://github.com/freebsd/poudriere).
+* [CTSRD-CHERI/poudriere](https://github.com/CTSRD-CHERI/poudriere).
