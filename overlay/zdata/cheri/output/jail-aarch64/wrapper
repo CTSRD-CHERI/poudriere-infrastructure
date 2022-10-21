@@ -14,33 +14,35 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
-HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/rootfs-aarch64 -target aarch64-unknown-freebsd14.0"
+export ADDR2LINE="${CHERI_OUTPUT}/sdk/bin/addr2line"
 export AR="${CHERI_OUTPUT}/sdk/bin/ar"
-export CC="${CHERI_OUTPUT}/sdk/bin/clang ${HOST_CFLAGS}"
-export CPP="${CHERI_OUTPUT}/sdk/bin/clang-cpp ${HOST_CFLAGS}"
-export CXX="${CHERI_OUTPUT}/sdk/bin/clang++ ${HOST_CFLAGS}"
+export CC="${CHERI_OUTPUT}/sdk/bin/clang"
+export CPP="${CHERI_OUTPUT}/sdk/bin/clang-cpp"
+export CPPFILT="${CHERI_OUTPUT}/sdk/bin/c++filt"
+export CXX="${CHERI_OUTPUT}/sdk/bin/clang++"
 export LD="${CHERI_OUTPUT}/sdk/bin/ld"
 export NM="${CHERI_OUTPUT}/sdk/bin/nm"
 export OBJCOPY="${CHERI_OUTPUT}/sdk/bin/objcopy"
 export OBJDUMP="${CHERI_OUTPUT}/sdk/bin/objdump"
 export RANLIB="${CHERI_OUTPUT}/sdk/bin/ranlib"
+export READELF="${CHERI_OUTPUT}/sdk/bin/readelf"
 export SIZE="${CHERI_OUTPUT}/sdk/bin/size"
 export STRINGS="${CHERI_OUTPUT}/sdk/bin/strings"
 export STRIP="${CHERI_OUTPUT}/sdk/bin/strip"
-export TAR="/host/usr/bin/tar"
+export AS="${CC}"
 
 case "${prog}" in
-clang)
+as)
+	${AS} "${@}"
+	;;
+cc|clang)
 	${CC} "${@}"
 	;;
-clang-cpp)
+cpp|clang-cpp)
 	${CPP} "${@}"
 	;;
-clang++)
+c++|clang++)
 	${CXX} "${@}"
-	;;
-tar)
-	"${TAR}" "${@}"
 	;;
 *)
 	"${CHERI_OUTPUT}/sdk/bin/${prog}" "${@}"

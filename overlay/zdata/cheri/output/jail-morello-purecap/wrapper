@@ -14,10 +14,9 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
-HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/morello-sdk/sysroot-morello-purecap -target aarch64-unknown-freebsd14.0 -march=morello+c64 -mabi=purecap -Xclang -morello-vararg=new"
+HOST_CFLAGS="-march=morello+c64 -mabi=purecap -Xclang -morello-vararg=new"
 export ADDR2LINE="${CHERI_OUTPUT}/morello-sdk/bin/addr2line"
 export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
-export AS="${CHERI_OUTPUT}/morello-sdk/bin/llvm-as"
 export CC="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang ${HOST_CFLAGS}"
 export CPP="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang-cpp ${HOST_CFLAGS}"
 export CPPFILT="${CHERI_OUTPUT}/morello-sdk/bin/c++filt"
@@ -31,6 +30,7 @@ export READELF="${CHERI_OUTPUT}/morello-sdk/bin/readelf"
 export SIZE="${CHERI_OUTPUT}/morello-sdk/bin/size"
 export STRINGS="${CHERI_OUTPUT}/morello-sdk/bin/strings"
 export STRIP="${CHERI_OUTPUT}/morello-sdk/bin/strip"
+export AS="${CC}"
 
 case "${prog}" in
 as)
