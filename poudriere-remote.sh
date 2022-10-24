@@ -64,21 +64,21 @@ texinfo
 # Remote zpool.
 REMOTE_ZPOOL="zdata"
 
-# Remote paths.
-REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
-REMOTE_PATH_CHERI="${REMOTE_PATH_ZDATA}/cheri"
-REMOTE_PATH_OUTPUT="${REMOTE_PATH_CHERI}/output"
-REMOTE_PATH_DISTFILES="${REMOTE_PATH_ZDATA}/distfiles"
-REMOTE_PATH_POUDRIERE="${REMOTE_PATH_ZDATA}/poudriere"
-REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
-REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
-REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
-REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
-REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
-REMOTE_PATH_ROOTFS_AARCH64="${REMOTE_PATH_OUTPUT}/rootfs-aarch64"
-REMOTE_PATH_ROOTFS_MORELLO_HYBRID="${REMOTE_PATH_OUTPUT}/rootfs-morello-hybrid"
-REMOTE_PATH_ROOTFS_MORELLO_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-morello-purecap"
-REMOTE_PATH_ROOTFS_RISCV64_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-riscv64-purecap"
+# Remote paths to set in build_options().
+REMOTE_PATH_ZDATA="/nonexisting"
+REMOTE_PATH_CHERI="/nonexisting"
+REMOTE_PATH_OUTPUT="/nonexisting"
+REMOTE_PATH_DISTFILES="/nonexisting"
+REMOTE_PATH_POUDRIERE="/nonexisting"
+REMOTE_PATH_REPOS="/nonexisting"
+REMOTE_PATH_CHERIBUILD="/nonexisting"
+REMOTE_PATH_CHERIBSD="/nonexisting"
+REMOTE_PATH_POUDRIEREINFRASTRUCTURE="/nonexisting"
+REMOTE_PATH_OVERLAY="/nonexisting"
+REMOTE_PATH_ROOTFS_AARCH64="/nonexisting"
+REMOTE_PATH_ROOTFS_MORELLO_HYBRID="/nonexisting"
+REMOTE_PATH_ROOTFS_MORELLO_PURECAP="/nonexisting"
+REMOTE_PATH_ROOTFS_RISCV64_PURECAP="/nonexisting"
 
 # Remote poudriere-infrastructure configuration.
 REMOTE_POUDRIEREINFRASTRUCTURE_REPO="https://github.com/CTSRD-CHERI/poudriere-infrastructure.git"
@@ -128,9 +128,9 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nv] [-d disk] [-b [user@]host:dest] -h host -t target -a
-       ${0} build [-nv] [-d disk] [-b [user@]host:dest] -h host -t target -f file [-f file2 ...]
-       ${0} build [-nv] [-d disk] [-b [user@]host:dest] -h host -t target origin [origin2 ...]
+Usage: ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -a
+       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -f file [-f file2 ...]
+       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
@@ -146,6 +146,7 @@ Options:
     -d disk             -- Use disk to create a ZFS zpool for data.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
+    -p zpool            -- Use zpool to create file systems for data (default: ${REMOTE_ZPOOL}).
     -v                  -- Enable verbose output.
                            Use twice to print shell commands.
 EOF
@@ -442,18 +443,25 @@ init_local() {
 }
 
 build_options() {
-	local _arg _origin
+	local _arg _error _origin _side
+
+	_side="${1}"
+	shift
+
+	[ -n "${_side}" ] || die "Missing side."
 
 	_all=0
 	_backup=""
 	_disk=""
 	_dryrun=0
+	_error=0
 	_files=""
 	_host=""
 	_target=""
 	_verbose=0
+	_zpool=""
 
-	while getopts "ab:d:f:h:nt:v" _arg; do
+	while getopts "ab:d:f:h:np:t:v" _arg; do
 		case "${_arg}" in
 		a)
 			_all=1
@@ -474,6 +482,9 @@ build_options() {
 			;;
 		n)
 			_dryrun=1
+			;;
+		p)
+			_zpool="${OPTARG}"
 			;;
 		t)
 			[ -z "${_target}" ] || usage
@@ -508,25 +519,49 @@ build_options() {
 	[ -n "${_host}" ] || usage
 	[ -n "${_target}" ] || usage
 	# _verbose is optional.
-}
-
-_build_local() {
-	local _all _backup _disk _dryrun _files _host _origins _target _verbose
-	local _flags
-
-	build_options "${@}"
 
 	REMOTE_DISK="${_disk}"
 	REMOTE_DRYRUN="${_dryrun}"
 	REMOTE_HOST="${_host}"
-	REMOTE_USER="$(id -nu)"
-	if [ $? -ne 0 ]; then
+	if [ "${_side}" = "local" ]; then
+		REMOTE_USER="$(id -nu)"
+		_error=$?
+	elif [ "${_side}" = "remote" ]; then
+		REMOTE_USER="$(sshcmd id -nu)"
+		_error=$?
+	else
+		die "Invalid side: ${_side}."
+	fi
+	if [ "${_error}" -ne 0 ]; then
 		die "Unable to get a user name."
 	fi
 	REMOTE_VERBOSE="${_verbose}"
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
+	REMOTE_ZPOOL="${_zpool}"
+	REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
+	REMOTE_PATH_CHERI="${REMOTE_PATH_ZDATA}/cheri"
+	REMOTE_PATH_OUTPUT="${REMOTE_PATH_CHERI}/output"
+	REMOTE_PATH_DISTFILES="${REMOTE_PATH_ZDATA}/distfiles"
+	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_ZDATA}/poudriere"
+	REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
+	REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
+	REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
+	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
+	REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
+	REMOTE_PATH_ROOTFS_AARCH64="${REMOTE_PATH_OUTPUT}/rootfs-aarch64"
+	REMOTE_PATH_ROOTFS_MORELLO_HYBRID="${REMOTE_PATH_OUTPUT}/rootfs-morello-hybrid"
+	REMOTE_PATH_ROOTFS_MORELLO_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-morello-purecap"
+	REMOTE_PATH_ROOTFS_RISCV64_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-riscv64-purecap"
+}
+
+_build_local() {
+	local _all _backup _disk _dryrun _files _host _origins _target _verbose
+	local _zpool
+	local _flags
+
+	build_options local "${@}"
 
 	init_local "${_target}"
 
@@ -544,20 +579,9 @@ _build_local() {
 
 build() {
 	local _all _backup _disk _dryrun _files _host _origins _target _verbose
+	local _zpool
 
-	build_options "${@}"
-
-	REMOTE_DISK="${_disk}"
-	REMOTE_DRYRUN="${_dryrun}"
-	REMOTE_HOST="${_host}"
-	REMOTE_USER="$(sshcmd id -nu)"
-	if [ $? -ne 0 ]; then
-		die "Unable to get a user name."
-	fi
-	REMOTE_VERBOSE="${_verbose}"
-	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
-		set -x
-	fi
+	build_options remote "${@}"
 
 	init
 
