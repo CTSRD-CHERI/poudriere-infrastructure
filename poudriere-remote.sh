@@ -461,7 +461,7 @@ build_options() {
 	_verbose=0
 	_zpool=""
 
-	while getopts "ab:d:f:h:np:t:v" _arg; do
+	while getopts "ab:d:f:h:np:t:Vv:" _arg; do
 		case "${_arg}" in
 		a)
 			_all=1
@@ -490,7 +490,7 @@ build_options() {
 			[ -z "${_target}" ] || usage
 			_target="${OPTARG}"
 			;;
-		v)
+		V)
 			_verbose=$((_verbose + 1))
 			;;
 		*)
