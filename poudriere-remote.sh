@@ -578,19 +578,25 @@ _build_local() {
 }
 
 build() {
-	local _all _backup _disk _dryrun _files _host _origins _target _verbose
-	local _zpool
+	local _all _backup _date _disk _dryrun _files _host _origins _target
+	local _verbose _zpool
 
 	build_options remote "${@}"
 
 	init
 
+	_date=$(date "+%Y-%m-%d-%H_%M_%S")
+
 	# Execute the local part of the build command on a remote host.
 	#
 	# Don't use check() here as we might want to dry-run remote commands.
-	sshcmd -t tmux new \
-	    sh "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/poudriere-remote.sh" \
-	    _build_local "${@}"
+	sshcmd -t tmux new-session -d -s "${_date}"
+	sshcmd -t tmux send-keys -t "${_date}:0" \
+	    sh Space \
+	   "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/poudriere-remote.sh" Space \
+	    _build_local Space \
+	    $'\''"${@}"$'\'' C-m
+	sshcmd -t tmux attach -t "${_date}"
 }
 
 main() {
