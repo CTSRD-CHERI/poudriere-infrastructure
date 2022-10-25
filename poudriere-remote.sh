@@ -62,10 +62,10 @@ texinfo
 "
 
 # Remote zpool.
-REMOTE_ZPOOL="zdata"
+REMOTE_ZPOOL="none"
 
 # Remote paths to set in build_options().
-REMOTE_PATH_ZDATA="/nonexisting"
+REMOTE_PATH_ZDATA="/zdata"
 REMOTE_PATH_CHERI="/nonexisting"
 REMOTE_PATH_OUTPUT="/nonexisting"
 REMOTE_PATH_DISTFILES="/nonexisting"
@@ -75,10 +75,6 @@ REMOTE_PATH_CHERIBUILD="/nonexisting"
 REMOTE_PATH_CHERIBSD="/nonexisting"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="/nonexisting"
 REMOTE_PATH_OVERLAY="/nonexisting"
-REMOTE_PATH_ROOTFS_AARCH64="/nonexisting"
-REMOTE_PATH_ROOTFS_MORELLO_HYBRID="/nonexisting"
-REMOTE_PATH_ROOTFS_MORELLO_PURECAP="/nonexisting"
-REMOTE_PATH_ROOTFS_RISCV64_PURECAP="/nonexisting"
 
 # Remote poudriere-infrastructure configuration.
 REMOTE_POUDRIEREINFRASTRUCTURE_REPO="https://github.com/CTSRD-CHERI/poudriere-infrastructure.git"
@@ -90,14 +86,11 @@ REMOTE_CHERIBUILD_BRANCH="qemu-cheri-bsd-user"
 
 # Remote cheribsd configuration.
 REMOTE_CHERIBSD_REPO="https://github.com/CTSRD-CHERI/cheribsd.git"
-REMOTE_CHERIBSD_BRANCH="dev"
+REMOTE_CHERIBSD_BRANCH="none"
 
 # Remote cheribsd-ports configuration.
 REMOTE_CHERIBSDPORTS_REPO="https://github.com/CTSRD-CHERI/cheribsd-ports.git"
 REMOTE_CHERIBSDPORTS_BRANCH="main"
-
-# Remote jail configuration.
-REMOTE_JAIL_VERSION="14.0-CURRENT"
 
 # Global dynamic variables.
 REMOTE_DISK=""
@@ -128,13 +121,15 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -a
-       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -f file [-f file2 ...]
-       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target origin [origin2 ...]
+Usage: ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version
+       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -a
+       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -f file [-f file2 ...]
+       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
     -t target           -- Target to build packages for (cheribuild OS target).
+    -v version          -- Version of an operating system to use (main, dev or YY.MMpX).
 
 Mutually exclusive parameters:
     -a                  -- Build the whole ports tree.
@@ -146,8 +141,8 @@ Options:
     -d disk             -- Use disk to create a ZFS zpool for data.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
-    -p zpool            -- Use zpool to create file systems for data (default: ${REMOTE_ZPOOL}).
-    -v                  -- Enable verbose output.
+    -p zpool            -- Use zpool to create file systems for data.
+    -V                  -- Enable verbose output.
                            Use twice to print shell commands.
 EOF
 	exit 1
@@ -241,6 +236,7 @@ init() {
 	dircreate "${REMOTE_PATH_CHERI}"
 	dircreate "${REMOTE_PATH_REPOS}"
 	dircreate "${REMOTE_PATH_CHERIBSD}"
+	dircreate "${REMOTE_PATH_CHERIBSD_BRANCH}"
 	dircreate "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 	dircreate "${REMOTE_PATH_POUDRIERE}"
 
@@ -262,67 +258,37 @@ init() {
 	gitclonecmd "cheribsd" \
 	    "${REMOTE_CHERIBSD_REPO}" \
 	    "${REMOTE_CHERIBSD_BRANCH}" \
-	    "${REMOTE_PATH_CHERIBSD}"
+	    "${REMOTE_PATH_CHERIBSD_BRANCH}"
 }
 
 init_local() {
 	local _cheribuildflags _cheribuildtarget _cheribuildstatus _file _files
-	local _host_machine_arch _machine _machine_arch _rootfs _target
+	local _host_machine_arch _jailname _machine _machine_arch _rootfs _set
+	local _target
 
 	_target="${1}"
+	_machine="${2}"
+	_machine_arch="${3}"
+	_cheribuildflags="${4}"
+	_cheribuildtarget="${5}"
+	_jailname="${6}"
+	_set="${7}"
 
 	[ -n "${_target}" ] || die "Missing _target."
+	[ -n "${_machine}" ] || die "Missing _machine."
+	[ -n "${_machine_arch}" ] || die "Missing _machine_arch."
+	[ -n "${_cheribuildflags}" ] || die "Missing _cheribuildflags."
+	[ -n "${_cheribuildtarget}" ] || die "Missing _cheribuildtarget."
+	[ -n "${_jailname}" ] || die "Missing _jailname."
+	[ -n "${_set}" ] || die "Missing _set."
 
-	case "${_target}" in
-	cheribsd-aarch64)
-		_machine="arm64"
-		_machine_arch="aarch64"
-		_rootfs="${REMOTE_PATH_ROOTFS_AARCH64}"
-		_cheribuildflags="--morello-qemu/no-use-smbd"
-		_cheribuildtarget="sdk-aarch64"
-		;;
-	cheribsd-morello-hybrid)
-		_machine="arm64"
-		_machine_arch="aarch64"
-		# Use an aarch64 world to build hybrid packages.
-		#
-		# We'd like to build natively most of the packages. The packages
-		# that we must build for the hybrid ABI can be built against
-		# an aarch64 world.
-		_rootfs="${REMOTE_PATH_ROOTFS_AARCH64}"
-		_cheribuildflags="--morello-qemu/no-use-smbd \
-		    --enable-hybrid-targets"
-		_cheribuildtarget="sdk-morello-hybrid"
-		;;
-	cheribsd-morello-purecap)
-		_machine="arm64"
-		_machine_arch="aarch64c"
-		_rootfs="${REMOTE_PATH_ROOTFS_MORELLO_PURECAP}"
-		_cheribuildflags="--morello-qemu/no-use-smbd"
-		_cheribuildtarget="sdk-morello-purecap"
-		;;
-	cheribsd-riscv64)
-		_machine="riscv64"
-		_machine_arch="riscv64"
-		_rootfs="${REMOTE_PATH_ROOTFS_RISCV64}"
-		_cheribuildflags=""
-		_cheribuildtarget="sdk-riscv64"
-		;;
-	cheribsd-riscv64-purecap)
-		_machine="riscv64"
-		_machine_arch="riscv64c"
-		_rootfs="${REMOTE_PATH_ROOTFS_RISCV64_PURECAP}"
-		_cheribuildflags=""
-		_cheribuildtarget="sdk-riscv64-purecap"
-		;;
-	*)
-		die "Unexpected target ${_target}."
-	esac
+	_rootfs="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}/${_machine_arch}"
 	_cheribuildflags="${_cheribuildflags} \
 	    --clean \
 	    --no-skip-sdk \
 	    --qemu/no-use-smbd \
-	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD}"
+	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
+	    --${_target}/install-directory ${_rootfs}"
 	_cheribuildstatus="${REMOTE_PATH_OUTPUT}/.${_cheribuildtarget}.done"
 
 	_host_machine_arch=$(check sudo uname -p)
@@ -350,6 +316,17 @@ init_local() {
 		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
 
+	info "Updating poudriere.conf."
+	if [ -n "${REMOTE_ZPOOL}" ]; then
+		check sudo sed -i '' "s@%%ZPOOL%%@${REMOTE_ZPOOL}@" \
+		    /usr/local/etc/poudriere.conf
+	else
+		check sudo sed -i '' -E "s@^ZPOOL=(.*)@NO_ZFS=yes@" \
+		    /usr/local/etc/poudriere.conf
+	fi
+	check sudo sed -i '' "s@%%ZDATA%%@${REMOTE_PATH_ZDATA}@" \
+	    /usr/local/etc/poudriere.conf
+
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
 		info "Reconfiguring binary image activators."
 		check sudo service qemu_user_static restart
@@ -358,7 +335,7 @@ init_local() {
 	info "Restarting nginx."
 	check sudo service nginx restart
 
-	sudo poudriere ports -l -n | grep "^${REMOTE_CHERIBSDPORTS_BRANCH}$"
+	sudo poudriere ports -l -n | grep -q "^${REMOTE_CHERIBSDPORTS_BRANCH}$"
 	if [ $? -eq 0 ]; then
 		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
 	else
@@ -399,6 +376,13 @@ init_local() {
 		check sudo rm -f "/${_file}"
 		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
 	done
+	_files=$(cd "${REMOTE_PATH_OVERLAY}/rootfs/${_machine_arch}" &&
+	    find . -type f -o -type l)
+	for _file in ${_files}; do
+		check sudo mkdir -p "$(dirname "${_rootfs}/${_file}")"
+		check sudo rm -f "${_rootfs}/${_file}"
+		check sudo cp -a "${REMOTE_PATH_OVERLAY}/rootfs/${_machine_arch}/${_file}" "${_rootfs}/${_file}"
+	done
 
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
 		if [ -f "${_rootfs}/libexec/ld-${_machine_arch}-elf.so.1" ]; then
@@ -420,26 +404,27 @@ init_local() {
 	# system files to be owned by root:wheel.
 	check sudo chown -R root:wheel "${_rootfs}"
 
-	sudo poudriere jail -i -j "${_target}" >/dev/null 2>&1
+	sudo poudriere jail -i -j "${_jailname}" >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
-		debug "Using a previously created jail with a name ${_target}."
+		debug "Using a previously created jail with a name ${_jailname}."
 	else
-		info "Creating a jail with a name ${_target}."
-		check sudo poudriere jail -c -j "${_target}" \
-		    -v "${REMOTE_JAIL_VERSION}" \
+		info "Creating a jail with a name ${_jailname}."
+		check sudo poudriere jail \
+		    -c \
+		    -j "${_jailname}" \
+		    -o CheriBSD \
+		    -v "${REMOTE_CHERIBSD_BRANCH}" \
 		    -a "${_machine}.${_machine_arch}" \
 		    -m null \
 		    -M "${_rootfs}"
 	fi
 
-	if [ -f "${REMOTE_PATH_PACKAGES}/${_target}/Latest/pkg.pkg" ]; then
-		debug "Using a previously built package manager for the jail."
-	else
-		info "Building a package manager to test the jail."
-		check sudo poudriere bulk -j "${_target}" \
-		    -p "${REMOTE_CHERIBSDPORTS_BRANCH}" \
-		    ports-mgmt/pkg
-	fi
+	info "Building a package manager to test the jail."
+	check sudo poudriere bulk \
+	    -j "${_jailname}" \
+	    -p "${REMOTE_CHERIBSDPORTS_BRANCH}" \
+	    -z "${_set}" \
+	    ports-mgmt/pkg
 }
 
 build_options() {
@@ -493,6 +478,10 @@ build_options() {
 		V)
 			_verbose=$((_verbose + 1))
 			;;
+		v)
+			[ -z "${_version}" ] || usage
+			_version="${OPTARG}"
+			;;
 		*)
 			usage
 			;;
@@ -509,7 +498,6 @@ build_options() {
 		_origins="${_origins} ${_origin}"
 	done
 
-	[ ${_all} -eq 0 ] && [ -z "${_files}" ] && [ -z "${_origins}" ] && usage
 	[ ${_all} -eq 1 ] && [ -n "${_files}" ] && usage
 	[ ${_all} -eq 1 ] && [ -n "${_origins}" ] && usage
 	[ -n "${_files}" ] && [ -n "${_origins}" ] && usage
@@ -518,6 +506,7 @@ build_options() {
 	# _dryrun is optional.
 	[ -n "${_host}" ] || usage
 	[ -n "${_target}" ] || usage
+	[ -n "${_version}" ] || usage
 	# _verbose is optional.
 
 	REMOTE_DISK="${_disk}"
@@ -539,33 +528,90 @@ build_options() {
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
+	REMOTE_CHERIBSD_BRANCH="${_version}"
 	REMOTE_ZPOOL="${_zpool}"
-	REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
+	if [ -n "${REMOTE_ZPOOL}" ]; then
+		REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
+	fi
 	REMOTE_PATH_CHERI="${REMOTE_PATH_ZDATA}/cheri"
 	REMOTE_PATH_OUTPUT="${REMOTE_PATH_CHERI}/output"
+	REMOTE_PATH_OUTPUT_REPOS="${REMOTE_PATH_OUTPUT}/repos"
+	REMOTE_PATH_OUTPUT_REPOS_CHERIBSD="${REMOTE_PATH_OUTPUT_REPOS}/cheribsd"
 	REMOTE_PATH_DISTFILES="${REMOTE_PATH_ZDATA}/distfiles"
 	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_ZDATA}/poudriere"
 	REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
 	REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
 	REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
+	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_BRANCH}"
 	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 	REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
-	REMOTE_PATH_ROOTFS_AARCH64="${REMOTE_PATH_OUTPUT}/rootfs-aarch64"
-	REMOTE_PATH_ROOTFS_MORELLO_HYBRID="${REMOTE_PATH_OUTPUT}/rootfs-morello-hybrid"
-	REMOTE_PATH_ROOTFS_MORELLO_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-morello-purecap"
-	REMOTE_PATH_ROOTFS_RISCV64_PURECAP="${REMOTE_PATH_OUTPUT}/rootfs-riscv64-purecap"
 }
 
 _build_local() {
 	local _all _backup _disk _dryrun _files _host _origins _target _verbose
 	local _zpool
-	local _flags
+	local _cheribuildflags _cheribuildtarget _cheribuildstatus _flags
+	local _jailname _machine _machine_arch _set
 
 	build_options local "${@}"
 
-	init_local "${_target}"
+	case "${_target}" in
+	cheribsd-aarch64)
+		_machine="arm64"
+		_machine_arch="aarch64"
+		_cheribuildflags="--morello-qemu/no-use-smbd"
+		_cheribuildtarget="sdk-aarch64"
+		_set="hybridabi"
+		;;
+	cheribsd-morello-hybrid)
+		_machine="arm64"
+		_machine_arch="aarch64"
+		# Use an aarch64 world to build hybrid packages.
+		#
+		# We'd like to build natively most of the packages. The packages
+		# that we must build for the hybrid ABI can be built against
+		# an aarch64 world.
+		_cheribuildflags="--morello-qemu/no-use-smbd \
+		    --enable-hybrid-targets"
+		_cheribuildtarget="sdk-morello-hybrid"
+		_set="hybridabi"
+		;;
+	cheribsd-morello-purecap)
+		_machine="arm64"
+		_machine_arch="aarch64c"
+		_cheribuildflags="--morello-qemu/no-use-smbd"
+		_cheribuildtarget="sdk-morello-purecap"
+		_set="cheriabi"
+		;;
+	cheribsd-riscv64)
+		_machine="riscv64"
+		_machine_arch="riscv64"
+		_cheribuildflags=""
+		_cheribuildtarget="sdk-riscv64"
+		_set="hybridabi"
+		;;
+	cheribsd-riscv64-purecap)
+		_machine="riscv64"
+		_machine_arch="riscv64c"
+		_cheribuildflags=""
+		_cheribuildtarget="sdk-riscv64-purecap"
+		_set="cheriabi"
+		;;
+	*)
+		die "Unexpected target ${_target}."
+	esac
+	_jailname="${_machine_arch}-${REMOTE_CHERIBSD_BRANCH}"
 
-	_flags="-j ${_target} -p ${REMOTE_CHERIBSDPORTS_BRANCH}"
+	init_local "${_target}" "${_machine}" "${_machine_arch}" \
+	    "${_cheribuildflags}" "${_cheribuildtarget}" "${_jailname}" \
+	    "${_set}"
+
+	if [ ${_all} -eq 0 ] && [ -z "${_files}" ] && [ -z "${_origins}" ]; then
+		info "The host is ready for use."
+		return
+	fi
+
+	_flags="-j ${_jailname} -p ${REMOTE_CHERIBSDPORTS_BRANCH} -z ${_set}"
 	if [ ${_all} -eq 1 ]; then
 		_flags="${_flags} -a"
 	fi
