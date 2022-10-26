@@ -14,7 +14,7 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
-HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/rootfs-morello-hybrid -target aarch64-unknown-freebsd14.0 -march=morello+a64c -Xclang -morello-vararg=new"
+HOST_CFLAGS="--sysroot=${CHERI_OUTPUT}/repos/cheribsd/dev/aarch64-hybrid -march=morello+a64c -Xclang -morello-vararg=new"
 export ADDR2LINE="${CHERI_OUTPUT}/morello-sdk/bin/addr2line"
 export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
 export CC="${CHERI_OUTPUT}/morello-sdk/bin/clang ${HOST_CFLAGS}"
