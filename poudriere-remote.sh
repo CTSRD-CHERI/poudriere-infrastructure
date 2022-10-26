@@ -565,12 +565,7 @@ _build_local() {
 		;;
 	cheribsd-morello-hybrid)
 		_machine="arm64"
-		_machine_arch="aarch64"
-		# Use an aarch64 world to build hybrid packages.
-		#
-		# We'd like to build natively most of the packages. The packages
-		# that we must build for the hybrid ABI can be built against
-		# an aarch64 world.
+		_machine_arch="aarch64-hybrid"
 		_cheribuildflags="--morello-qemu/no-use-smbd \
 		    --enable-hybrid-targets"
 		_cheribuildtarget="sdk-morello-hybrid"
