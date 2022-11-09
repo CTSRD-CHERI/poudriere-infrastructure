@@ -287,6 +287,7 @@ init_local() {
 	    --clean \
 	    --no-skip-sdk \
 	    --qemu/no-use-smbd \
+	    --${_target}/with-manpages \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
 	    --${_target}/install-directory ${_rootfs}"
 	_cheribuildstatus="${REMOTE_PATH_OUTPUT}/.${_cheribuildtarget}.done"
