@@ -121,10 +121,10 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version
-       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -a
-       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -f file [-f file2 ...]
-       ${0} build [-nv] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version origin [origin2 ...]
+Usage: ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version
+       ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -a
+       ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -f file [-f file2 ...]
+       ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
