@@ -41,6 +41,7 @@ die() {
 
 usage() {
 	echo "usage: ${0} generate|sign"
+	exit 1
 }
 
 key_generate() {
