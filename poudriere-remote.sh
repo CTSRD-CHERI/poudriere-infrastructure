@@ -87,10 +87,13 @@ REMOTE_CHERIBUILD_BRANCH="qemu-cheri-bsd-user"
 # Remote cheribsd configuration.
 REMOTE_CHERIBSD_REPO="https://github.com/CTSRD-CHERI/cheribsd.git"
 REMOTE_CHERIBSD_BRANCH="none"
+REMOTE_CHERIBSD_JAILSUFFIX="none"
+REMOTE_CHERIBSD_VERSION="none"
 
 # Remote cheribsd-ports configuration.
 REMOTE_CHERIBSDPORTS_REPO="https://github.com/CTSRD-CHERI/cheribsd-ports.git"
-REMOTE_CHERIBSDPORTS_BRANCH="main"
+REMOTE_CHERIBSDPORTS_BRANCH="none"
+REMOTE_CHERIBSDPORTS_TREENAME="none"
 
 # Global dynamic variables.
 REMOTE_DISK=""
@@ -129,7 +132,7 @@ Usage: ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t ta
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
     -t target           -- Target to build packages for (cheribuild OS target).
-    -v version          -- Version of an operating system to use (main, dev or YY.MMpX).
+    -v version          -- Version of an operating system to use (main, dev or YY.MM).
 
 Mutually exclusive parameters:
     -a                  -- Build the whole ports tree.
@@ -282,7 +285,7 @@ init_local() {
 	[ -n "${_jailname}" ] || die "Missing _jailname."
 	[ -n "${_set}" ] || die "Missing _set."
 
-	_rootfs="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}/${_machine_arch}"
+	_rootfs="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_VERSION}/${_machine_arch}"
 	_cheribuildflags="${_cheribuildflags} \
 	    --clean \
 	    --no-skip-sdk \
@@ -290,7 +293,7 @@ init_local() {
 	    --${_target}/with-manpages \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
 	    --${_target}/install-directory ${_rootfs}"
-	_cheribuildstatus="${REMOTE_PATH_OUTPUT}/.${_cheribuildtarget}.done"
+	_cheribuildstatus="${REMOTE_PATH_OUTPUT}/.${_cheribuildtarget}.${REMOTE_CHERIBSD_VERSION}.done"
 
 	_host_machine_arch=$(check sudo uname -p)
 	if [ $? -ne 0 ]; then
@@ -336,13 +339,13 @@ init_local() {
 	info "Restarting nginx."
 	check sudo service nginx restart
 
-	sudo poudriere ports -l -n | grep -q "^${REMOTE_CHERIBSDPORTS_BRANCH}$"
+	sudo poudriere ports -l -n | grep -q "^${REMOTE_CHERIBSDPORTS_TREENAME}$"
 	if [ $? -eq 0 ]; then
-		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
+		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_TREENAME}."
 	else
-		info "Creating a ports tree with a name ${REMOTE_CHERIBSDPORTS_BRANCH}."
+		info "Creating a ports tree with a name ${REMOTE_CHERIBSDPORTS_TREENAME}."
 		check sudo poudriere ports -c -m git \
-		    -p "${REMOTE_CHERIBSDPORTS_BRANCH}" \
+		    -p "${REMOTE_CHERIBSDPORTS_TREENAME}" \
 		    -U "${REMOTE_CHERIBSDPORTS_REPO}" \
 		    -B "${REMOTE_CHERIBSDPORTS_BRANCH}"
 	fi
@@ -414,7 +417,7 @@ init_local() {
 		    -c \
 		    -j "${_jailname}" \
 		    -o CheriBSD \
-		    -v "${REMOTE_CHERIBSD_BRANCH}" \
+		    -v "${REMOTE_CHERIBSD_VERSION}" \
 		    -a "${_machine}.${_machine_arch}" \
 		    -m null \
 		    -M "${_rootfs}"
@@ -423,7 +426,7 @@ init_local() {
 	info "Building a package manager to test the jail."
 	check sudo poudriere bulk \
 	    -j "${_jailname}" \
-	    -p "${REMOTE_CHERIBSDPORTS_BRANCH}" \
+	    -p "${REMOTE_CHERIBSDPORTS_TREENAME}" \
 	    -z "${_set}" \
 	    ports-mgmt/pkg
 }
@@ -529,7 +532,32 @@ build_options() {
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
-	REMOTE_CHERIBSD_BRANCH="${_version}"
+	case "${_version}" in
+	dev|main|[0-9][0-9].[0-9][0-9])
+		REMOTE_CHERIBSD_VERSION="${_version}"
+		;;
+	*)
+		die "Invalid version: ${_version}."
+		;;
+	esac
+	case "${REMOTE_CHERIBSD_VERSION}" in
+	dev|main)
+		REMOTE_CHERIBSD_BRANCH="${REMOTE_CHERIBSD_VERSION}"
+		REMOTE_CHERIBSD_JAILSUFFIX="${REMOTE_CHERIBSD_VERSION}"
+		REMOTE_CHERIBSDPORTS_BRANCH="main"
+		REMOTE_CHERIBSDPORTS_TREENAME="${REMOTE_CHERIBSDPORTS_BRANCH}"
+		;;
+	[0-9][0-9].[0-9][0-9])
+		REMOTE_CHERIBSD_BRANCH="releng/${REMOTE_CHERIBSD_VERSION}"
+		REMOTE_CHERIBSD_JAILSUFFIX="$(echo "${REMOTE_CHERIBSD_VERSION}" |
+		    tr '.' '_')"
+		REMOTE_CHERIBSDPORTS_BRANCH="${REMOTE_CHERIBSD_BRANCH}"
+		REMOTE_CHERIBSDPORTS_TREENAME="${REMOTE_CHERIBSD_JAILSUFFIX}"
+		;;
+	*)
+		die "Unexpected version: ${REMOTE_CHERIBSD_VERSION}."
+		;;
+	esac
 	REMOTE_ZPOOL="${_zpool}"
 	if [ -n "${REMOTE_ZPOOL}" ]; then
 		REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
@@ -543,7 +571,7 @@ build_options() {
 	REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
 	REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
 	REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
-	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_BRANCH}"
+	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_VERSION}"
 	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 	REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
 }
@@ -596,7 +624,7 @@ _build_local() {
 	*)
 		die "Unexpected target ${_target}."
 	esac
-	_jailname="${_machine_arch}-${REMOTE_CHERIBSD_BRANCH}"
+	_jailname="${_machine_arch}-${REMOTE_CHERIBSD_JAILSUFFIX}"
 
 	init_local "${_target}" "${_machine}" "${_machine_arch}" \
 	    "${_cheribuildflags}" "${_cheribuildtarget}" "${_jailname}" \
@@ -607,7 +635,7 @@ _build_local() {
 		return
 	fi
 
-	_flags="-j ${_jailname} -p ${REMOTE_CHERIBSDPORTS_BRANCH} -z ${_set}"
+	_flags="-j ${_jailname} -p ${REMOTE_CHERIBSDPORTS_TREENAME} -z ${_set}"
 	if [ ${_all} -eq 1 ]; then
 		_flags="${_flags} -a"
 	fi
