@@ -45,7 +45,7 @@ die() {
 }
 
 usage() {
-	echo "usage: ${0} [-nV] repo-path remote-path"
+	echo "usage: ${0} [-nDV] repo-path remote-path"
 	exit 1
 
 }
@@ -56,10 +56,13 @@ main() {
 	_rsync_flags="-avz"
 	_verbose=0
 
-	while getopts "nV" _arg; do
+	while getopts "DnV" _arg; do
 		case "${_arg}" in
 		n)
 			_rsync_flags="${_rsync_flags} -n"
+			;;
+		D)
+			_rsync_flags="${_rsync_flags} --delete"
 			;;
 		V)
 			_verbose=1
