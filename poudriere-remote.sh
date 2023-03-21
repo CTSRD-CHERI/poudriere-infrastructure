@@ -124,10 +124,10 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version
-       ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -a
-       ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version -f file [-f file2 ...]
-       ${0} build [-nV] [-d disk] [-p zpool] [-b [user@]host:dest] -h host -t target -v version origin [origin2 ...]
+Usage: ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version
+       ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version -a
+       ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version -f file [-f file2 ...]
+       ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
@@ -140,7 +140,6 @@ Mutually exclusive parameters:
     origin              -- Build a port matching origin.
 
 Options:
-    -b [user@]host:dest -- Backup built packages to a host (rsync(1) destination).
     -d disk             -- Use disk to create a ZFS zpool for data.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
@@ -440,7 +439,6 @@ build_options() {
 	[ -n "${_side}" ] || die "Missing side."
 
 	_all=0
-	_backup=""
 	_disk=""
 	_dryrun=0
 	_error=0
@@ -454,10 +452,6 @@ build_options() {
 		case "${_arg}" in
 		a)
 			_all=1
-			;;
-		b)
-			[ -z "${_backup}" ] || usage
-			_backup="${OPTARG}"
 			;;
 		d)
 			_disk="${OPTARG}"
@@ -505,7 +499,6 @@ build_options() {
 	[ ${_all} -eq 1 ] && [ -n "${_files}" ] && usage
 	[ ${_all} -eq 1 ] && [ -n "${_origins}" ] && usage
 	[ -n "${_files}" ] && [ -n "${_origins}" ] && usage
-	# _backup is optional.
 	# _disk is optional.
 	# _dryrun is optional.
 	[ -n "${_host}" ] || usage
@@ -577,7 +570,7 @@ build_options() {
 }
 
 _build_local() {
-	local _all _backup _disk _dryrun _files _host _origins _target _verbose
+	local _all _disk _dryrun _files _host _origins _target _verbose
 	local _zpool
 	local _cheribuildflags _cheribuildtarget _cheribuildstatus _flags
 	local _jailname _machine _machine_arch _set
@@ -641,14 +634,10 @@ _build_local() {
 	fi
 	_flags="${_flags} ${_files} ${_origins}"
 	check sudo poudriere bulk ${_flags}
-
-	if [ -n "${_backup}" ]; then
-		info "Backup isn't implemented yet."
-	fi
 }
 
 build() {
-	local _all _backup _date _disk _dryrun _files _host _origins _target
+	local _all _date _disk _dryrun _files _host _origins _target
 	local _verbose _zpool
 
 	build_options remote "${@}"
