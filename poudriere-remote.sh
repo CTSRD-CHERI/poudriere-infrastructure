@@ -124,10 +124,10 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version
-       ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version -a
-       ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version -f file [-f file2 ...]
-       ${0} build [-nV] [-d disk] [-p zpool] -h host -t target -v version origin [origin2 ...]
+Usage: ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version
+       ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version -a
+       ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version -f file [-f file2 ...]
+       ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
@@ -140,6 +140,7 @@ Mutually exclusive parameters:
     origin              -- Build a port matching origin.
 
 Options:
+    -b os-branch        -- Branch name for OS userland.
     -d disk             -- Use disk to create a ZFS zpool for data.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
@@ -207,14 +208,14 @@ dircreate() {
 		    "${_filesystem}" >/dev/null 2>&1; then
 			debug "Using a previously created filesystem ${_filesystem}."
 		else
-			check sshcmd sudo zfs create "${_filesystem}"
+			check sshcmd sudo zfs create -p "${_filesystem}"
 		fi
 	else
 		if sshcmd ls -d "${_dir}" >/dev/null 2>&1; then
 			debug "Using a previously created directory ${_dir}."
 		else
 			info "Creating a directory with a path ${_dir}."
-			check sshcmd sudo mkdir "${_dir}"
+			check sshcmd sudo mkdir -p "${_dir}"
 		fi
 	fi
 
@@ -284,7 +285,7 @@ init_local() {
 	[ -n "${_jailname}" ] || die "Missing _jailname."
 	[ -n "${_set}" ] || die "Missing _set."
 
-	_rootfs="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_VERSION}/${_machine_arch}"
+	_rootfs="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}/${_machine_arch}"
 	_cheribuildflags="${_cheribuildflags} \
 	    --clean \
 	    --no-skip-sdk \
@@ -292,7 +293,7 @@ init_local() {
 	    --${_target}/with-manpages \
 	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
 	    --${_target}/install-directory ${_rootfs}"
-	_cheribuildstatus="${REMOTE_PATH_OUTPUT}/.${_cheribuildtarget}.${REMOTE_CHERIBSD_VERSION}.done"
+	_cheribuildstatus="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}/.${_machine_arch}.done"
 
 	_host_machine_arch=$(check sudo uname -p)
 	if [ $? -ne 0 ]; then
@@ -431,7 +432,7 @@ init_local() {
 }
 
 build_options() {
-	local _arg _error _origin _side
+	local _arg _branch _error _origin _side
 
 	_side="${1}"
 	shift
@@ -439,6 +440,7 @@ build_options() {
 	[ -n "${_side}" ] || die "Missing side."
 
 	_all=0
+	_branch=""
 	_disk=""
 	_dryrun=0
 	_error=0
@@ -452,6 +454,9 @@ build_options() {
 		case "${_arg}" in
 		a)
 			_all=1
+			;;
+		b)
+			_branch="${OPTARG}"
 			;;
 		d)
 			_disk="${OPTARG}"
@@ -525,6 +530,7 @@ build_options() {
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
+	REMOTE_CHERIBSD_BRANCH="${_branch}"
 	case "${_version}" in
 	dev|main|[0-9][0-9].[0-9][0-9])
 		REMOTE_CHERIBSD_VERSION="${_version}"
@@ -535,15 +541,18 @@ build_options() {
 	esac
 	case "${REMOTE_CHERIBSD_VERSION}" in
 	dev|main)
-		REMOTE_CHERIBSD_BRANCH="${REMOTE_CHERIBSD_VERSION}"
-		REMOTE_CHERIBSD_JAILSUFFIX="${REMOTE_CHERIBSD_VERSION}"
+		if [ -z "${REMOTE_CHERIBSD_BRANCH}" ]; then
+			REMOTE_CHERIBSD_BRANCH="${REMOTE_CHERIBSD_VERSION}"
+		fi
+		REMOTE_CHERIBSD_JAILSUFFIX="${REMOTE_CHERIBSD_BRANCH}"
 		REMOTE_CHERIBSDPORTS_BRANCH="main"
 		REMOTE_CHERIBSDPORTS_TREENAME="${REMOTE_CHERIBSDPORTS_BRANCH}"
 		;;
 	[0-9][0-9].[0-9][0-9])
-		REMOTE_CHERIBSD_BRANCH="releng/${REMOTE_CHERIBSD_VERSION}"
-		REMOTE_CHERIBSD_JAILSUFFIX="$(echo "${REMOTE_CHERIBSD_VERSION}" |
-		    tr '.' '_')"
+		if [ -z "${REMOTE_CHERIBSD_BRANCH}" ]; then
+			REMOTE_CHERIBSD_BRANCH="releng/${REMOTE_CHERIBSD_VERSION}"
+		fi
+		REMOTE_CHERIBSD_JAILSUFFIX="${REMOTE_CHERIBSD_VERSION}"
 		REMOTE_CHERIBSDPORTS_BRANCH="${REMOTE_CHERIBSD_BRANCH}"
 		REMOTE_CHERIBSDPORTS_TREENAME="${REMOTE_CHERIBSD_JAILSUFFIX}"
 		;;
@@ -551,6 +560,8 @@ build_options() {
 		die "Unexpected version: ${REMOTE_CHERIBSD_VERSION}."
 		;;
 	esac
+	REMOTE_CHERIBSD_JAILSUFFIX="$(echo "${REMOTE_CHERIBSD_JAILSUFFIX}" |
+	    tr '/.' '_')"
 	REMOTE_ZPOOL="${_zpool}"
 	if [ -n "${REMOTE_ZPOOL}" ]; then
 		REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
@@ -564,7 +575,7 @@ build_options() {
 	REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
 	REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
 	REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
-	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_VERSION}"
+	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_BRANCH}"
 	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 	REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
 }
