@@ -280,7 +280,7 @@ init_local() {
 	[ -n "${_target}" ] || die "Missing _target."
 	[ -n "${_machine}" ] || die "Missing _machine."
 	[ -n "${_machine_arch}" ] || die "Missing _machine_arch."
-	[ -n "${_cheribuildflags}" ] || die "Missing _cheribuildflags."
+	# _cheribuildflags can be empty.
 	[ -n "${_cheribuildtarget}" ] || die "Missing _cheribuildtarget."
 	[ -n "${_jailname}" ] || die "Missing _jailname."
 	[ -n "${_set}" ] || die "Missing _set."
@@ -588,40 +588,36 @@ _build_local() {
 
 	build_options local "${@}"
 
+	_cheribuildflags=""
 	case "${_target}" in
 	cheribsd-aarch64)
 		_machine="arm64"
 		_machine_arch="aarch64"
-		_cheribuildflags="--morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-aarch64"
 		_set="hybridabi"
 		;;
 	cheribsd-morello-hybrid)
 		_machine="arm64"
 		_machine_arch="aarch64-hybrid"
-		_cheribuildflags="--morello-qemu/no-use-smbd \
-		    --enable-hybrid-targets"
+		_cheribuildflags="--enable-hybrid-targets"
 		_cheribuildtarget="sdk-morello-hybrid"
 		_set="hybridabi"
 		;;
 	cheribsd-morello-purecap)
 		_machine="arm64"
 		_machine_arch="aarch64c"
-		_cheribuildflags="--morello-qemu/no-use-smbd"
 		_cheribuildtarget="sdk-morello-purecap"
 		_set="cheriabi"
 		;;
 	cheribsd-riscv64)
 		_machine="riscv64"
 		_machine_arch="riscv64"
-		_cheribuildflags=""
 		_cheribuildtarget="sdk-riscv64"
 		_set="hybridabi"
 		;;
 	cheribsd-riscv64-purecap)
 		_machine="riscv64"
 		_machine_arch="riscv64c"
-		_cheribuildflags=""
 		_cheribuildtarget="sdk-riscv64-purecap"
 		_set="cheriabi"
 		;;
