@@ -69,12 +69,17 @@ REMOTE_PATH_ZDATA="/zdata"
 REMOTE_PATH_CHERI="/nonexisting"
 REMOTE_PATH_OUTPUT="/nonexisting"
 REMOTE_PATH_DISTFILES="/nonexisting"
-REMOTE_PATH_POUDRIERE="/nonexisting"
 REMOTE_PATH_REPOS="/nonexisting"
 REMOTE_PATH_CHERIBUILD="/nonexisting"
 REMOTE_PATH_CHERIBSD="/nonexisting"
+REMOTE_PATH_POUDRIERE="/nonexisting"
+REMOTE_PATH_POUDRIEREBASE="/nonexisting"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="/nonexisting"
 REMOTE_PATH_OVERLAY="/nonexisting"
+
+# Remote poudriere configuration.
+REMOTE_POUDRIERE_REPO="https://github.com/CTSRD-CHERI/poudriere.git"
+REMOTE_POUDRIERE_BRANCH="master"
 
 # Remote poudriere-infrastructure configuration.
 REMOTE_POUDRIEREINFRASTRUCTURE_REPO="https://github.com/CTSRD-CHERI/poudriere-infrastructure.git"
@@ -195,6 +200,10 @@ gitclonecmd() {
 	fi
 }
 
+poudrierecmd() {
+	sudo "${REMOTE_PATH_POUDRIERE}/poudriere" "${@}"
+}
+
 dircreate() {
 	local _dir _filesystem
 
@@ -240,8 +249,9 @@ init() {
 	dircreate "${REMOTE_PATH_REPOS}"
 	dircreate "${REMOTE_PATH_CHERIBSD}"
 	dircreate "${REMOTE_PATH_CHERIBSD_BRANCH}"
-	dircreate "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 	dircreate "${REMOTE_PATH_POUDRIERE}"
+	dircreate "${REMOTE_PATH_POUDRIEREBASE}"
+	dircreate "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 
 	if sshcmd sudo pkg query %o = devel/git >/dev/null; then
 		debug "Using previously installed devel/git."
@@ -250,6 +260,10 @@ init() {
 		check sshcmd sudo pkg install -qy devel/git
 	fi
 
+	check gitclonecmd "poudriere" \
+	    "${REMOTE_POUDRIERE_REPO}" \
+	    "${REMOTE_POUDRIERE_BRANCH}" \
+	    "${REMOTE_PATH_POUDRIERE}"
 	check gitclonecmd "poudriere-infrastructure" \
 	    "${REMOTE_POUDRIEREINFRASTRUCTURE_REPO}" \
 	    "${REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH}" \
@@ -308,11 +322,19 @@ init_local() {
 		check cheribuildcmd bsd-user-qemu
 	fi
 
+	info "Rebuilding poudriere."
+	(cd "${REMOTE_PATH_POUDRIERE}" &&
+	    ./configure &&
+	    make)
+	if [ $? -ne 0 ]; then
+		die "Unable to rebuild Poudriere."
+	fi
+
 	info "Copying configuration files."
 	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
 	    find etc/ usr/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
-		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
+		die "Unable to list files in ${REMOTE_PATH_POUDRIEREBASE}."
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
@@ -339,12 +361,12 @@ init_local() {
 	info "Restarting nginx."
 	check sudo service nginx restart
 
-	sudo poudriere ports -l -n | grep -q "^${REMOTE_CHERIBSDPORTS_TREENAME}$"
+	poudrierecmd ports -l -n | grep -q "^${REMOTE_CHERIBSDPORTS_TREENAME}$"
 	if [ $? -eq 0 ]; then
 		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_TREENAME}."
 	else
 		info "Creating a ports tree with a name ${REMOTE_CHERIBSDPORTS_TREENAME}."
-		check sudo poudriere ports -c -m git \
+		check poudrierecmd ports -c -m git \
 		    -p "${REMOTE_CHERIBSDPORTS_TREENAME}" \
 		    -U "${REMOTE_CHERIBSDPORTS_REPO}" \
 		    -B "${REMOTE_CHERIBSDPORTS_BRANCH}"
@@ -373,7 +395,7 @@ init_local() {
 	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
 	    find zdata/ -type f -o -type l)
 	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
-		die "Unable to list files in ${REMOTE_PATH_POUDRIERE}."
+		die "Unable to list files in ${REMOTE_PATH_POUDRIEREBASE}."
 	fi
 	for _file in ${_files}; do
 		check sudo mkdir -p "$(dirname "/${_file}")"
@@ -408,12 +430,12 @@ init_local() {
 	# system files to be owned by root:wheel.
 	check sudo chown -R root:wheel "${_rootfs}"
 
-	sudo poudriere jail -i -j "${_jailname}" >/dev/null 2>&1
+	poudrierecmd jail -i -j "${_jailname}" >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		debug "Using a previously created jail with a name ${_jailname}."
 	else
 		info "Creating a jail with a name ${_jailname}."
-		check sudo poudriere jail \
+		check poudrierecmd jail \
 		    -c \
 		    -j "${_jailname}" \
 		    -o CheriBSD \
@@ -424,7 +446,7 @@ init_local() {
 	fi
 
 	info "Building a package manager to test the jail."
-	check sudo poudriere bulk \
+	check poudrierecmd bulk \
 	    -j "${_jailname}" \
 	    -p "${REMOTE_CHERIBSDPORTS_TREENAME}" \
 	    -z "${_set}" \
@@ -571,11 +593,12 @@ build_options() {
 	REMOTE_PATH_OUTPUT_REPOS="${REMOTE_PATH_OUTPUT}/repos"
 	REMOTE_PATH_OUTPUT_REPOS_CHERIBSD="${REMOTE_PATH_OUTPUT_REPOS}/cheribsd"
 	REMOTE_PATH_DISTFILES="${REMOTE_PATH_ZDATA}/distfiles"
-	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_ZDATA}/poudriere"
 	REMOTE_PATH_REPOS="${REMOTE_PATH_ZDATA}/repos"
 	REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
 	REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
 	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_BRANCH}"
+	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_REPOS}/poudriere"
+	REMOTE_PATH_POUDRIEREBASE="${REMOTE_PATH_ZDATA}/poudriere"
 	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 	REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
 }
@@ -640,7 +663,7 @@ _build_local() {
 		_flags="${_flags} -a"
 	fi
 	_flags="${_flags} ${_files} ${_origins}"
-	check sudo poudriere bulk ${_flags}
+	check poudrierecmd bulk ${_flags}
 }
 
 build() {
