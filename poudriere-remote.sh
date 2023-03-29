@@ -187,10 +187,10 @@ gitclonecmd() {
 
 	if sshcmd ls -d "${_path}/.git" >/dev/null 2>&1; then
 		info "Updating previously cloned ${_name} in ${_path}."
-		check sshcmd git -C "${_path}" pull -fq
+		sshcmd git -C "${_path}" pull -fq
 	else
 		info "Cloning ${_name} into ${_path}."
-		check sshcmd git clone -q --single-branch \
+		sshcmd git clone -q --single-branch \
 		    --branch "${_branch}" "${_repo}" "${_path}"
 	fi
 }
@@ -250,15 +250,15 @@ init() {
 		check sshcmd sudo pkg install -qy devel/git
 	fi
 
-	gitclonecmd "poudriere-infrastructure" \
+	check gitclonecmd "poudriere-infrastructure" \
 	    "${REMOTE_POUDRIEREINFRASTRUCTURE_REPO}" \
 	    "${REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH}" \
 	    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
-	gitclonecmd "cheribuild" \
+	check gitclonecmd "cheribuild" \
 	    "${REMOTE_CHERIBUILD_REPO}" \
 	    "${REMOTE_CHERIBUILD_BRANCH}" \
 	    "${REMOTE_PATH_CHERIBUILD}"
-	gitclonecmd "cheribsd" \
+	check gitclonecmd "cheribsd" \
 	    "${REMOTE_CHERIBSD_REPO}" \
 	    "${REMOTE_CHERIBSD_BRANCH}" \
 	    "${REMOTE_PATH_CHERIBSD_BRANCH}"
