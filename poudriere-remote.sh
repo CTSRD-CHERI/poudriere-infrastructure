@@ -56,7 +56,6 @@ nginx
 ninja
 pixman
 pkgconf
-poudriere
 python3
 texinfo
 "
