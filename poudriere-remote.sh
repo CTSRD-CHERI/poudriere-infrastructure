@@ -323,8 +323,8 @@ init_local() {
 
 	info "Rebuilding poudriere."
 	(cd "${REMOTE_PATH_POUDRIERE}" &&
-	    ./configure &&
-	    make)
+	    check ./configure &&
+	    check make)
 	if [ $? -ne 0 ]; then
 		die "Unable to rebuild Poudriere."
 	fi
