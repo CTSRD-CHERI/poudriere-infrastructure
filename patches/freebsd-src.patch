@@ -1,0 +1,13 @@
+diff --git a/libexec/rtld-elf/rtld_paths.h b/libexec/rtld-elf/rtld_paths.h
+index c051db7b58..6b99da99b3 100644
+--- a/libexec/rtld-elf/rtld_paths.h
++++ b/libexec/rtld-elf/rtld_paths.h
+@@ -49,7 +49,7 @@
+ #endif
+ 
+ #ifndef _PATH_ELF_HINTS
+-#define	_PATH_ELF_HINTS		"/var/run/ld-elf.so.hints"
++#define	_PATH_ELF_HINTS		"/var/run/ld-elf-host.so.hints"
+ #endif
+ 
+ #ifndef _PATH_LIBMAP_CONF
