@@ -68,6 +68,18 @@ ldconfig_start()
 			check_startmsgs &&
 			    echo '64-bit compatibility ldconfig path:' ${_LDC}
 			${ldconfig} -64 ${_ins} ${_LDC}
+
+			ldconfighost_hints_file="/var/run/ld-elf-host.so.hints"
+			ldconfighost_paths="/host/lib /host/usr/lib ${ldconfig64_paths}"
+			_LDC=""
+			for i in ${ldconfighost_paths}; do
+				if [ -r "${i}" ]; then
+					_LDC="${_LDC} ${i}"
+				fi
+			done
+			check_startmsgs &&
+			    echo 'Host ldconfig path:' ${_LDC}
+			${ldconfig} ${_ins} -f ${ldconfighost_hints_file} ${_LDC}
 			;;
 		amd64|mips64|powerpc64)
 			for i in ${ldconfig_local32_dirs}; do
