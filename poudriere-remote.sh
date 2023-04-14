@@ -420,8 +420,13 @@ init_local() {
 		if [ -f "${_rootfs}/libexec/ld-elf.so.1" ]; then
 			debug "Using previously copied host ld-elf.so.1."
 		else
-			info "Copying host ld-elf.so.1."
-			check cp /libexec/ld-elf.so.1 "${_rootfs}/libexec/ld-elf.so.1"
+			if [ -f "${_rootfs}/libexec/ld-${_host_machine_arch}-elf.so.1" ]; then
+				info "Symlinking patched ld-elf.so.1."
+				check sudo ln -s "ld-${_host_machine_arch}-elf.so.1" "${_rootfs}/libexec/ld-elf.so.1"
+			else
+				info "Copying host ld-elf.so.1."
+				check sudo cp /libexec/ld-elf.so.1 "${_rootfs}/libexec/ld-elf.so.1"
+			fi
 		fi
 	fi
 
