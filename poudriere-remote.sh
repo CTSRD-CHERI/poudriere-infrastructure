@@ -623,13 +623,6 @@ _build_local() {
 		_cheribuildtarget="sdk-aarch64"
 		_set="hybridabi"
 		;;
-	cheribsd-morello-hybrid)
-		_machine="arm64"
-		_machine_arch="aarch64-hybrid"
-		_cheribuildflags="--enable-hybrid-targets"
-		_cheribuildtarget="sdk-morello-hybrid"
-		_set="hybridabi"
-		;;
 	cheribsd-morello-purecap)
 		_machine="arm64"
 		_machine_arch="aarch64c"
