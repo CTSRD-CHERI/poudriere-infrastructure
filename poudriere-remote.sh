@@ -128,10 +128,10 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version
-       ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version -a
-       ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version -f file [-f file2 ...]
-       ${0} build [-nV] [-d disk] [-p zpool] [-b os-branch] -h host -t target -v version origin [origin2 ...]
+Usage: ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version
+       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version -a
+       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version -f file [-f file2 ...]
+       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
@@ -148,7 +148,8 @@ Options:
     -d disk             -- Use disk to create a ZFS zpool for data.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
-    -p zpool            -- Use zpool to create file systems for data.
+    -p ports-branch     -- Branch name for ports.
+    -z zpool            -- Use zpool to create file systems for data.
     -V                  -- Enable verbose output.
                            Use twice to print shell commands.
 EOF
@@ -458,7 +459,7 @@ init_local() {
 }
 
 build_options() {
-	local _arg _branch _error _origin _side
+	local _arg _os_branch _error _origin _ports_branch _side
 
 	_side="${1}"
 	shift
@@ -466,13 +467,14 @@ build_options() {
 	[ -n "${_side}" ] || die "Missing side."
 
 	_all=0
-	_branch=""
 	_disk=""
 	_dryrun=0
 	_error=0
 	_files=""
 	_host=""
 	_target=""
+	_os_branch=""
+	_ports_branch=""
 	_verbose=0
 	_zpool=""
 
@@ -482,7 +484,7 @@ build_options() {
 			_all=1
 			;;
 		b)
-			_branch="${OPTARG}"
+			_os_branch="${OPTARG}"
 			;;
 		d)
 			_disk="${OPTARG}"
@@ -498,7 +500,7 @@ build_options() {
 			_dryrun=1
 			;;
 		p)
-			_zpool="${OPTARG}"
+			_ports_branch="${OPTARG}"
 			;;
 		t)
 			[ -z "${_target}" ] || usage
@@ -510,6 +512,9 @@ build_options() {
 		v)
 			[ -z "${_version}" ] || usage
 			_version="${OPTARG}"
+			;;
+		z)
+			_zpool="${OPTARG}"
 			;;
 		*)
 			usage
@@ -556,7 +561,8 @@ build_options() {
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
-	REMOTE_CHERIBSD_BRANCH="${_branch}"
+	REMOTE_CHERIBSD_BRANCH="${_os_branch}"
+	REMOTE_CHERIBSDPORTS_BRANCH="${_ports_branch}"
 	case "${_version}" in
 	dev|main|[0-9][0-9].[0-9][0-9])
 		REMOTE_CHERIBSD_VERSION="${_version}"
@@ -571,7 +577,9 @@ build_options() {
 			REMOTE_CHERIBSD_BRANCH="${REMOTE_CHERIBSD_VERSION}"
 		fi
 		REMOTE_CHERIBSD_JAILSUFFIX="${REMOTE_CHERIBSD_BRANCH}"
-		REMOTE_CHERIBSDPORTS_BRANCH="main"
+		if [ -z "${REMOTE_CHERIBSDPORTS_BRANCH}" ]; then
+			REMOTE_CHERIBSDPORTS_BRANCH="main"
+		fi
 		REMOTE_CHERIBSDPORTS_TREENAME="${REMOTE_CHERIBSDPORTS_BRANCH}"
 		;;
 	[0-9][0-9].[0-9][0-9])
@@ -579,7 +587,9 @@ build_options() {
 			REMOTE_CHERIBSD_BRANCH="releng/${REMOTE_CHERIBSD_VERSION}"
 		fi
 		REMOTE_CHERIBSD_JAILSUFFIX="${REMOTE_CHERIBSD_VERSION}"
-		REMOTE_CHERIBSDPORTS_BRANCH="${REMOTE_CHERIBSD_BRANCH}"
+		if [ -z "${REMOTE_CHERIBSDPORTS_BRANCH}" ]; then
+			REMOTE_CHERIBSDPORTS_BRANCH="${REMOTE_CHERIBSD_BRANCH}"
+		fi
 		REMOTE_CHERIBSDPORTS_TREENAME="${REMOTE_CHERIBSD_JAILSUFFIX}"
 		;;
 	*)
@@ -587,7 +597,9 @@ build_options() {
 		;;
 	esac
 	REMOTE_CHERIBSD_JAILSUFFIX="$(echo "${REMOTE_CHERIBSD_JAILSUFFIX}" |
-	    tr '/.' '_')"
+	    tr '/.-' '_')"
+	REMOTE_CHERIBSDPORTS_TREENAME="$(echo "${REMOTE_CHERIBSDPORTS_TREENAME}" |
+	    tr '/.-' '_')"
 	REMOTE_ZPOOL="${_zpool}"
 	if [ -n "${REMOTE_ZPOOL}" ]; then
 		REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
