@@ -1,6 +1,7 @@
 #!/bin/sh
 
 CHERI_OUTPUT="/zdata/cheri/output"
+CHERIBSD_VERSION=$(awk '/^#define[[:space:]]+__CheriBSD_version/{print $3}' /usr/include/sys/param.h)
 
 prog=$(basename "${0}")
 
@@ -14,7 +15,17 @@ export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
 # subprocesses don't execute the user mode for shell again and instead directly
 # execute utilities.
 #
-HOST_CFLAGS="-march=morello+c64 -mabi=purecap -Xclang -morello-vararg=new"
+if [ "${CHERIBSD_VERSION}" -le 20220314 ]; then
+	TLS_FLAGS="-femulated-tls"
+	VARARG_FLAGS=
+elif [ "${CHERIBSD_VERSION}" -le 20220828 ]; then
+	TLS_FLAGS=
+	VARARG_FLAGS="-Xclang -morello-vararg=new"
+else
+	TLS_FLAGS=
+	VARARG_FLAGS="-Xclang -morello-vararg=new -Xclang -morello-bounded-memargs=caller-only"
+fi
+HOST_CFLAGS="-target aarch64-unknown-freebsd14.0 -march=morello -mabi=purecap ${TLS_FLAGS} ${VARARG_FLAGS}"
 export ADDR2LINE="${CHERI_OUTPUT}/morello-sdk/bin/addr2line"
 export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
 export CC="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang ${HOST_CFLAGS}"
