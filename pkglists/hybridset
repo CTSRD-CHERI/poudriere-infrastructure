@@ -1,7 +1,12 @@
+devel/cmake-core
+devel/llvm-cheri
 devel/llvm-morello
 devel/meson
+devel/ninja
+devel/py-attrs
 devel/py-lxml
 lang/perl5.32
 lang/python39
 textproc/py-docutils
+textproc/py-libxml2
 textproc/py-mako
