@@ -1,15 +1,18 @@
 #!/bin/sh
 
-CHERI_OUTPUT="/zdata/cheri/output"
 CHERIBSD_VERSION=$(awk '/^#define[[:space:]]+__CheriBSD_version/{print $3}' /usr/include/sys/param.h)
+
+LLVM_PREFIX="/toolchain/usr/local64/llvm-morello"
+LLVM_BIN="${LLVM_PREFIX}/bin"
+LLVM_LIB="${LLVM_PREFIX}/lib"
 
 prog=$(basename "${0}")
 
 #
 # Use host binaries and libraries for native tools.
 #
-export PATH="${CHERI_OUTPUT}/morello-sdk/bin:${PATH}"
-export LD_LIBRARY_PATH="/host/usr/local/lib:/host/usr/lib:/host/lib"
+export PATH="${LLVM_BIN}:${PATH}"
+export LD_LIBRARY_PATH="${LLVM_LIB}/llvm-morello/lib:/host/usr/local/lib:/host/usr/lib:/host/lib"
 #
 # Overwrite variables from usr/local/etc/poudriere.d/*-make.conf so that
 # subprocesses don't execute the user mode for shell again and instead directly
@@ -26,24 +29,30 @@ else
 	VARARG_FLAGS="-Xclang -morello-vararg=new -Xclang -morello-bounded-memargs=caller-only"
 fi
 HOST_CFLAGS="-target aarch64-unknown-freebsd14.0 -march=morello -mabi=purecap ${TLS_FLAGS} ${VARARG_FLAGS}"
-export ADDR2LINE="${CHERI_OUTPUT}/morello-sdk/bin/addr2line"
-export AR="${CHERI_OUTPUT}/morello-sdk/bin/ar"
-export CC="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang ${HOST_CFLAGS}"
-export CPP="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang-cpp ${HOST_CFLAGS}"
-export CPPFILT="${CHERI_OUTPUT}/morello-sdk/bin/c++filt"
-export CXX="${CHERI_OUTPUT}/morello-sdk/utils/cheribsd-morello-purecap-clang++ ${HOST_CFLAGS}"
-export LD="${CHERI_OUTPUT}/morello-sdk/bin/ld"
-export NM="${CHERI_OUTPUT}/morello-sdk/bin/nm"
-export OBJCOPY="${CHERI_OUTPUT}/morello-sdk/bin/objcopy"
-export OBJDUMP="${CHERI_OUTPUT}/morello-sdk/bin/objdump"
-export RANLIB="${CHERI_OUTPUT}/morello-sdk/bin/ranlib"
-export READELF="${CHERI_OUTPUT}/morello-sdk/bin/readelf"
-export SIZE="${CHERI_OUTPUT}/morello-sdk/bin/size"
-export STRINGS="${CHERI_OUTPUT}/morello-sdk/bin/strings"
-export STRIP="${CHERI_OUTPUT}/morello-sdk/bin/strip"
+export ADDR2LINE="${LLVM_BIN}/llvm-addr2line"
+export AR="${LLVM_BIN}/llvm-ar"
+export CC="${LLVM_BIN}/clang ${HOST_CFLAGS}"
+export CPP="${LLVM_BIN}/clang-cpp ${HOST_CFLAGS}"
+export CPPFILT="${LLVM_BIN}/llvm-cxxfilt"
+export CXX="${LLVM_BIN}/clang++ ${HOST_CFLAGS}"
+export LD="${LLVM_BIN}/ld"
+export NM="${LLVM_BIN}/llvm-nm"
+export OBJCOPY="${LLVM_BIN}/llvm-objcopy"
+export OBJDUMP="${LLVM_BIN}/llvm-objdump"
+export RANLIB="${LLVM_BIN}/llvm-ranlib"
+export READELF="${LLVM_BIN}/llvm-readelf"
+export SIZE="${LLVM_BIN}/llvm-size"
+export STRINGS="${LLVM_BIN}/llvm-strings"
+export STRIP="${LLVM_BIN}/llvm-strip"
 export AS="${CC}"
 
 case "${prog}" in
+addr2line)
+	${ADDR2LINE} "${@}"
+	;;
+ar)
+	${AR} "${@}"
+	;;
 as)
 	${AS} "${@}"
 	;;
@@ -56,7 +65,36 @@ cpp|clang-cpp)
 c++|clang++)
 	${CXX} "${@}"
 	;;
-*)
-	"${CHERI_OUTPUT}/morello-sdk/bin/${prog}" "${@}"
+c++filt)
+	${CPPFILT} "${@}"
 	;;
+ld)
+	${LD} "${@}"
+	;;
+nm)
+	${NM} "${@}"
+	;;
+objcopy)
+	${OBJCOPY} "${@}"
+	;;
+objdump)
+	${OBJDUMP} "${@}"
+	;;
+ranlib)
+	${RANLIB} "${@}"
+	;;
+readelf)
+	${READELF} "${@}"
+	;;
+size)
+	${SIZE} "${@}"
+	;;
+strings)
+	${STRINGS} "${@}"
+	;;
+strip)
+	${STRIP} "${@}"
+	;;
+*)
+	exit 1
 esac
