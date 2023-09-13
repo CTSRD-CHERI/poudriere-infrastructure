@@ -128,19 +128,19 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version
-       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version -a
-       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version -f file [-f file2 ...]
-       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -t target -v version origin [origin2 ...]
+Usage: ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version
+       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version -A
+       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version -F file [-F file2 ...]
+       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
-    -t target           -- Target to build packages for (cheribuild OS target).
+    -a abi              -- ABI to build packages for (aarch64, aarch64c, riscv64 or riscv64c).
     -v version          -- Version of an operating system to use (main, dev or YY.MM).
 
 Mutually exclusive parameters:
-    -a                  -- Build the whole ports tree.
-    -f file             -- Build ports listed in file.
+    -A                  -- Build the whole ports tree.
+    -F file             -- Build ports listed in file.
     origin              -- Build a port matching origin.
 
 Options:
@@ -279,34 +279,25 @@ init() {
 }
 
 init_local() {
-	local _cheribuildflags _cheribuildtarget _cheribuildstatus _file _files
+	local _cheribuildflags _cheribuildtargets _cheribuildstatus _file _files
 	local _host_machine_arch _jailname _machine _machine_arch _rootfs _set
-	local _target
 
-	_target="${1}"
-	_machine="${2}"
-	_machine_arch="${3}"
+	_machine="${1}"
+	_machine_arch="${2}"
+	_rootfs="${3}"
 	_cheribuildflags="${4}"
-	_cheribuildtarget="${5}"
+	_cheribuildtargets="${5}"
 	_jailname="${6}"
 	_set="${7}"
 
-	[ -n "${_target}" ] || die "Missing _target."
 	[ -n "${_machine}" ] || die "Missing _machine."
 	[ -n "${_machine_arch}" ] || die "Missing _machine_arch."
+	[ -n "${_rootfs}" ] || die "Missing _rootfs."
 	# _cheribuildflags can be empty.
-	[ -n "${_cheribuildtarget}" ] || die "Missing _cheribuildtarget."
+	[ -n "${_cheribuildtargets}" ] || die "Missing _cheribuildtargets."
 	[ -n "${_jailname}" ] || die "Missing _jailname."
 	[ -n "${_set}" ] || die "Missing _set."
 
-	_rootfs="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}/${_machine_arch}"
-	_cheribuildflags="${_cheribuildflags} \
-	    --clean \
-	    --no-skip-sdk \
-	    --qemu/no-use-smbd \
-	    --${_target}/with-manpages \
-	    --${_target}/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
-	    --${_target}/install-directory ${_rootfs}"
 	_cheribuildstatus="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}/.${_machine_arch}.done"
 
 	_host_machine_arch=$(check sudo uname -p)
@@ -373,9 +364,9 @@ init_local() {
 	fi
 
 	if [ -f "${_cheribuildstatus}" ]; then
-		debug "Using previously built SDK for the target ${_target}."
+		debug "Using previously built SDK for ${_machine_arch}."
 	else
-		info "Building SDK for the target ${_target}."
+		info "Building SDK for for ${_machine_arch}."
 		if [ -d "${_rootfs}" ]; then
 			# Set the owner of rootfs to an unprivileged user in
 			# case we must update any already existing files (e.g.,
@@ -387,7 +378,7 @@ init_local() {
 			# by the base system.
 			check sudo chown -R "${REMOTE_USER}:wheel" "${_rootfs}"
 		fi
-		check cheribuildcmd ${_cheribuildflags} "${_cheribuildtarget}"
+		check cheribuildcmd ${_cheribuildflags} ${_cheribuildtargets}
 		check touch "${_cheribuildstatus}"
 	fi
 
@@ -466,13 +457,13 @@ build_options() {
 
 	[ -n "${_side}" ] || die "Missing side."
 
+	_abi=""
 	_all=0
 	_disk=""
 	_dryrun=0
 	_error=0
 	_files=""
 	_host=""
-	_target=""
 	_os_branch=""
 	_ports_branch=""
 	_verbose=0
@@ -480,8 +471,12 @@ build_options() {
 
 	while getopts "ab:d:f:h:np:t:Vv:" _arg; do
 		case "${_arg}" in
-		a)
+		A)
 			_all=1
+			;;
+		a)
+			[ -z "${_abi}" ] || usage
+			_abi="${OPTARG}"
 			;;
 		b)
 			_os_branch="${OPTARG}"
@@ -489,7 +484,7 @@ build_options() {
 		d)
 			_disk="${OPTARG}"
 			;;
-		f)
+		F)
 			_files="${_files} -f '${OPTARG}'"
 			;;
 		h)
@@ -501,10 +496,6 @@ build_options() {
 			;;
 		p)
 			_ports_branch="${OPTARG}"
-			;;
-		t)
-			[ -z "${_target}" ] || usage
-			_target="${OPTARG}"
 			;;
 		V)
 			_verbose=$((_verbose + 1))
@@ -538,7 +529,7 @@ build_options() {
 	# _disk is optional.
 	# _dryrun is optional.
 	[ -n "${_host}" ] || usage
-	[ -n "${_target}" ] || usage
+	[ -n "${_abi}" ] || usage
 	[ -n "${_version}" ] || usage
 	# _verbose is optional.
 
@@ -620,46 +611,59 @@ build_options() {
 }
 
 _build_local() {
-	local _all _disk _dryrun _files _host _origins _target _verbose
+	local _abi _all _disk _dryrun _files _host _origins _verbose
 	local _zpool
-	local _cheribuildflags _cheribuildtarget _cheribuildstatus _flags
-	local _jailname _machine _machine_arch _set
+	local _cheribsdtarget _cheribuildflags _cheribuildtargets
+	local _cheribuildstatus _flags _jailname _machine _rootfs _set
 
 	build_options local "${@}"
 
+	_rootfsprefix="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}"
 	_cheribuildflags=""
-	case "${_target}" in
-	cheribsd-aarch64)
+	case "${_abi}" in
+	aarch64)
 		_machine="arm64"
-		_machine_arch="aarch64"
-		_cheribuildtarget="sdk-aarch64"
+		_cheribsdtarget="cheribsd-aarch64"
+		# Build a hybrid SDK to build devel/gdb-cheri in an aarch64
+		# jail.
+		_cheribuildflags="--enable-hybrid-targets \
+		    --cheribsd-morello-hybrid/install-directory ${_rootfsprefix}/aarch64-hybrid"
+		_cheribuildtargets="sdk-aarch64 sdk-morello-hybrid"
 		_set="hybridabi"
 		;;
-	cheribsd-morello-purecap)
+	aarch64c)
 		_machine="arm64"
-		_machine_arch="aarch64c"
-		_cheribuildtarget="sdk-morello-purecap"
+		_cheribsdtarget="cheribsd-morello-purecap"
+		_cheribuildtargets="sdk-morello-purecap"
 		_set="cheriabi"
 		;;
-	cheribsd-riscv64)
+	riscv64)
 		_machine="riscv64"
-		_machine_arch="riscv64"
-		_cheribuildtarget="sdk-riscv64"
+		_cheribsdtarget="cheribsd-riscv64"
+		_cheribuildtargets="sdk-riscv64"
 		_set="hybridabi"
 		;;
-	cheribsd-riscv64-purecap)
+	riscv64c)
 		_machine="riscv64"
-		_machine_arch="riscv64c"
-		_cheribuildtarget="sdk-riscv64-purecap"
+		_cheribsdtarget="cheribsd-riscv64-purecap"
+		_cheribuildtargets="sdk-riscv64-purecap"
 		_set="cheriabi"
 		;;
 	*)
-		die "Unexpected target ${_target}."
+		die "Unexpected ABI ${_abi}."
 	esac
-	_jailname="${_machine_arch}-${REMOTE_CHERIBSD_JAILSUFFIX}"
+	_rootfs="${_rootfsprefix}/${_abi}"
+	_cheribuildflags="${_cheribuildflags} \
+	    --clean \
+	    --no-skip-sdk \
+	    --qemu/no-use-smbd \
+	    --cheribsd/with-manpages \
+	    --cheribsd/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
+	    --${_cheribsdtarget}/install-directory ${_rootfs}"
+	_jailname="${_abi}-${REMOTE_CHERIBSD_JAILSUFFIX}"
 
-	init_local "${_target}" "${_machine}" "${_machine_arch}" \
-	    "${_cheribuildflags}" "${_cheribuildtarget}" "${_jailname}" \
+	init_local "${_machine}" "${_abi}" "${_rootfs}"
+	    "${_cheribuildflags}" "${_cheribuildtargets}" "${_jailname}" \
 	    "${_set}"
 
 	if [ ${_all} -eq 0 ] && [ -z "${_files}" ] && [ -z "${_origins}" ]; then
@@ -676,7 +680,7 @@ _build_local() {
 }
 
 build() {
-	local _all _date _disk _dryrun _files _host _origins _target
+	local _abi _all _date _disk _dryrun _files _host _origins
 	local _verbose _zpool
 
 	build_options remote "${@}"
