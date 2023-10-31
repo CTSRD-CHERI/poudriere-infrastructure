@@ -53,6 +53,7 @@ qemu_user_static_start()
 		echo "$0: interpreter ${interpreter} not found, cannot register."
 	fi
 	# register aarch64c interpreter styled 'aarch64c'
+	# The same interpreter handles aarch64cb binaries.
 	interpreter=${QEMU_DIR}/${QEMU_PREFIX}aarch64c${QEMU_SUFFIX}
 	interpreter_flags="${qemu_user_static_aarch64c_flags}"
 	if [ -x "${interpreter}" ]; then
