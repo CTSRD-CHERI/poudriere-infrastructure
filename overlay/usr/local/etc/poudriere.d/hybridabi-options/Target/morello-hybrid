@@ -1,3 +1,5 @@
 CROSS_TOOLCHAIN=aarch64-hybrid-sdk
 CROSS_SYSROOT=/toolchain/sysroot-morello-hybrid
 CROSS_ABI_FILE=/bin/sh
+
+CONFIGURE_ARGS+=--enable-cross-guesses=risky
