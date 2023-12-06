@@ -29,11 +29,11 @@
 #
 
 PORT_BASEURL="https://github.com/CTSRD-CHERI/cheribsd-ports/tree/main"
-TMPFILE=""
+TMPDIR=""
 
 cleanup() {
-	if [ -f "${TMPFILE}" ]; then
-		rm "${TMPFILE}"
+	if [ -d "${TMPDIR}" ]; then
+		rm -Ir "${TMPDIR}"
 	fi
 }
 
@@ -52,6 +52,7 @@ usage() {
 main() {
 	local _date _repo_name _repo_path
 	local _comment _origin _port _version _www
+	local _tmphtml
 
 	_repo_path="${1}"
 	[ -d "${_repo_path}" ] || usage
@@ -64,9 +65,23 @@ main() {
 		die "File '${_repo_path}/packagesite.pkg' doesn't exist."
 	fi
 
-	TMPFILE=$(mktemp -t poudriere-packagesite)
+	TMPDIR=$(mktemp -d -t poudriere-packagesite)
+	if [ $? -ne 0 ]; then
+		die "Unable to create a temporary directory."
+	fi
+	_tmphtml="${TMPDIR}/html"
 
-	cat <<EOF >"${TMPFILE}"
+	tar -x -f "${_repo_path}/packagesite.pkg" -C "${TMPDIR}" packagesite.yaml
+	if [ $? -ne 0 ]; then
+		die "Unable to extract packagesite.yaml from '${_repo_path}/packagesite.pkg'."
+	fi
+
+	_npackages=$(awk 'END{ print NR }' "${TMPDIR}/packagesite.yaml")
+	if [ -z "${_npackages}" ]; then
+		die "Unable to calculate the number of packages."
+	fi
+
+	cat <<EOF >"${_tmphtml}"
 <!DOCTYPE html>
 <html>
   <head>
@@ -77,6 +92,7 @@ main() {
     <h1>CheriBSD packages: ${_repo_name}</h1>
 
     <p>
+      Total number of packages: ${_npackages}.<br>
       Last updated: ${_date}.
     </p>
 
@@ -89,12 +105,11 @@ main() {
 	<th>Description</th>
       </tr>
 EOF
-	tar Oxf "${_repo_path}/packagesite.pkg" packagesite.yaml |
-	    jq -j '.name, "\t", .origin, "\t", .version, "\t", .www, "\t", .comment, "\n"' |
+	jq -j '.name, "\t", .origin, "\t", .version, "\t", .www, "\t", .comment, "\n"' "${TMPDIR}/packagesite.yaml" |
 	    sort |
 	    while read _name _origin _version _www _comment; do
 		_port="${PORT_BASEURL}/${_origin}"
-		cat <<EOF >>"${TMPFILE}"
+		cat <<EOF >>"${_tmphtml}"
       <tr>
         <td>${_name}</td>
         <td>${_version}</td>
@@ -104,18 +119,20 @@ EOF
       </tr>
 EOF
 	done
-	cat <<EOF >>"${TMPFILE}"
+	cat <<EOF >>"${_tmphtml}"
     </table>
   </body>
 </html>
 EOF
 
-	chgrp ctsrd "${TMPFILE}"
-	chmod 0755 "${TMPFILE}"
-	mv "${TMPFILE}" "${_repo_path}.html"
+	chgrp ctsrd "${_tmphtml}"
+	chmod 0755 "${_tmphtml}"
+	mv "${_tmphtml}" "${_repo_path}.html"
 	if [ $? -ne 0 ]; then
-		die "Unable to move '${TMPFILE}' to '${_repo_path}.html'."
+		die "Unable to move '${_tmphtml}' to '${_repo_path}.html'."
 	fi
+
+	cleanup
 }
 
 main "${@}"
