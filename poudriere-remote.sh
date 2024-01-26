@@ -40,6 +40,9 @@
 # sudo.
 # 5. Optionally, create a separate disk for a ZFS zpool.
 
+# Local paths to set in build_options().
+LOCAL_PATH_POUDRIEREINFRASTRUCTURE="/nonexisting"
+
 # Dependencies to install on a remote host.
 REMOTE_DEPS="
 aarch64-binutils
@@ -200,6 +203,20 @@ gitclonecmd() {
 	fi
 }
 
+rsynccmd() {
+	local _local_path _remote_path
+
+	_local_path="${1}"
+	_remote_path="${2}"
+
+	[ -n "${_local_path}" ] || die "Missing _local_path"
+	[ -n "${_remote_path}" ] || die "Missing _remote_path"
+
+	info "Updating the remote directory '${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}' with the local directory '${LOCAL_PATH_POUDRIEREINFRASTRUCTURE}'."
+	check rsync -az "${_local_path}" --exclude .git \
+	    "${REMOTE_HOST}:${_remote_path}"
+}
+
 poudrierecmd() {
 	sudo "${REMOTE_PATH_POUDRIERE}/poudriere" "${@}"
 }
@@ -260,14 +277,12 @@ init() {
 		check sshcmd sudo pkg install -qy devel/git
 	fi
 
+	check rsynccmd "${LOCAL_PATH_POUDRIEREINFRASTRUCTURE}/" \
+	    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/"
 	check gitclonecmd "poudriere" \
 	    "${REMOTE_POUDRIERE_REPO}" \
 	    "${REMOTE_POUDRIERE_BRANCH}" \
 	    "${REMOTE_PATH_POUDRIERE}"
-	check gitclonecmd "poudriere-infrastructure" \
-	    "${REMOTE_POUDRIEREINFRASTRUCTURE_REPO}" \
-	    "${REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH}" \
-	    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 	check gitclonecmd "cheribuild" \
 	    "${REMOTE_CHERIBUILD_REPO}" \
 	    "${REMOTE_CHERIBUILD_BRANCH}" \
@@ -606,6 +621,7 @@ build_options() {
 	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_REPOS}/cheribsd/${REMOTE_CHERIBSD_BRANCH}"
 	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_REPOS}/poudriere"
 	REMOTE_PATH_POUDRIEREBASE="${REMOTE_PATH_ZDATA}/poudriere"
+	LOCAL_PATH_POUDRIEREINFRASTRUCTURE="$(dirname "$(realpath "${0}")")"
 	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
 	REMOTE_PATH_OVERLAY="${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/overlay"
 }
