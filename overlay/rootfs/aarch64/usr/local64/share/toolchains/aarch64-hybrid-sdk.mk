@@ -7,7 +7,7 @@ XCXX=			/toolchain/bin/clang++
 CROSS_BINUTILS_PREFIX=	/toolchain/bin/
 X_COMPILER_TYPE=	clang
 
-CROSS_HOST=		aarch64-unknown-freebsd14.0
+CROSS_HOST=		aarch64-unknown-freebsd15.0
 
 # /toolchain/bin/wrapper requires MACHINE_ARCH_HYBRID to be defined to configure
 # the toolchain to cross-compile for the hybrid ABI.
