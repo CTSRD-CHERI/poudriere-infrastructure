@@ -91,6 +91,7 @@ REMOTE_POUDRIEREINFRASTRUCTURE_BRANCH="master"
 # Remote cheribuild configuration.
 REMOTE_CHERIBUILD_REPO="https://github.com/CTSRD-CHERI/cheribuild.git"
 REMOTE_CHERIBUILD_BRANCH="qemu-cheri-bsd-user"
+REMOTE_CHERIBUILD_UPDATE=0
 
 # Remote cheribsd configuration.
 REMOTE_CHERIBSD_REPO="https://github.com/CTSRD-CHERI/cheribsd.git"
@@ -132,10 +133,10 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version
-       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version -A
-       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version -F file [-F file2 ...]
-       ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h host -a abi -v version origin [origin2 ...]
+Usage: ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version
+       ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -A
+       ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -F file [-F file2 ...]
+       ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version origin [origin2 ...]
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
@@ -153,6 +154,7 @@ Options:
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
     -p ports-branch     -- Branch name for ports.
+    -U                  -- Update environment dependencies (e.g., LLVM, QEMU).
     -z zpool            -- Use zpool to create file systems for data.
     -V                  -- Enable verbose output.
                            Use twice to print shell commands.
@@ -176,9 +178,17 @@ sshcmd() {
 }
 
 cheribuildcmd() {
+	local _skip_update
+
+	if [ "${REMOTE_CHERIBUILD_UPDATE}" -eq 1 ]; then
+		_skip_update=""
+	else
+		_skip_update="--skip-update"
+	fi
+
 	"${REMOTE_PATH_CHERIBUILD}/cheribuild.py" \
-	    --quiet --source-root "${REMOTE_PATH_CHERI}" \
-	    "${@}"
+	    --quiet --source-root "${REMOTE_PATH_CHERI}" ${_skip_update} \
+	    --force "${@}"
 }
 
 gitclonecmd() {
@@ -477,6 +487,7 @@ build_options() {
 
 	_abi=""
 	_all=0
+	_cheribuildupdate=0
 	_disk=""
 	_dryrun=0
 	_error=0
@@ -487,7 +498,7 @@ build_options() {
 	_verbose=0
 	_zpool=""
 
-	while getopts "a:b:d:f:h:np:t:Vv:" _arg; do
+	while getopts "a:b:d:f:h:np:t:UVv:" _arg; do
 		case "${_arg}" in
 		A)
 			_all=1
@@ -514,6 +525,9 @@ build_options() {
 			;;
 		p)
 			_ports_branch="${OPTARG}"
+			;;
+		U)
+			_cheribuildupdate=1
 			;;
 		V)
 			_verbose=$((_verbose + 1))
@@ -570,6 +584,7 @@ build_options() {
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
+	REMOTE_CHERIBUILD_UPDATE="${_cheribuildupdate}"
 	REMOTE_CHERIBSD_BRANCH="${_os_branch}"
 	REMOTE_CHERIBSDPORTS_BRANCH="${_ports_branch}"
 	case "${_version}" in
