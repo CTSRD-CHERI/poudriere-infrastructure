@@ -138,7 +138,7 @@ Usage: ${0} build [-nV] [-d disk] [-z zpool] [-b os-branch] [-p ports-branch] -h
 
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
-    -a abi              -- ABI to build packages for (aarch64, aarch64c, riscv64 or riscv64c).
+    -a abi              -- ABI to build packages for (aarch64, aarch64c, aarch64cb, riscv64 or riscv64c).
     -v version          -- Version of an operating system to use (main, dev or YY.MM).
 
 Mutually exclusive parameters:
@@ -297,14 +297,16 @@ init_local() {
 	local _cheribuildflags _cheribuildtargets _cheribuildstatus _file _files
 	local _host_machine_arch _jailname _machine _machine_arch _rootfs _set
 
-	_machine="${1}"
-	_machine_arch="${2}"
-	_rootfs="${3}"
-	_cheribuildflags="${4}"
-	_cheribuildtargets="${5}"
-	_jailname="${6}"
-	_set="${7}"
+	_abi="${1}"
+	_machine="${2}"
+	_machine_arch="${3}"
+	_rootfs="${4}"
+	_cheribuildflags="${5}"
+	_cheribuildtargets="${6}"
+	_jailname="${7}"
+	_set="${8}"
 
+	[ -n "${_abi}" ] || die "Missing _abi."
 	[ -n "${_machine}" ] || die "Missing _machine."
 	[ -n "${_machine_arch}" ] || die "Missing _machine_arch."
 	[ -n "${_rootfs}" ] || die "Missing _rootfs."
@@ -451,7 +453,7 @@ init_local() {
 		    -j "${_jailname}" \
 		    -o CheriBSD \
 		    -v "${REMOTE_CHERIBSD_VERSION}" \
-		    -a "${_machine}.${_machine_arch}" \
+		    -a "${_machine}.${_abi}" \
 		    -m null \
 		    -M "${_rootfs}"
 	fi
@@ -630,7 +632,8 @@ _build_local() {
 	local _abi _all _disk _dryrun _files _host _origins _verbose
 	local _zpool
 	local _cheribsdtarget _cheribuildflags _cheribuildtargets
-	local _cheribuildstatus _flags _jailname _machine _rootfs _set
+	local _cheribuildstatus _flags _jailname _machine _machine_arch
+	local _rootfs _set
 
 	build_options local "${@}"
 
@@ -639,6 +642,7 @@ _build_local() {
 	case "${_abi}" in
 	aarch64)
 		_machine="arm64"
+		_machine_arch="${_abi}"
 		_cheribsdtarget="cheribsd-aarch64"
 		# Build a hybrid SDK to build devel/gdb-cheri in an aarch64
 		# jail.
@@ -649,18 +653,28 @@ _build_local() {
 		;;
 	aarch64c)
 		_machine="arm64"
+		_machine_arch="${_abi}"
 		_cheribsdtarget="cheribsd-morello-purecap"
 		_cheribuildtargets="sdk-morello-purecap"
 		_set="cheriabi"
 		;;
+	aarch64cb)
+		_machine="arm64"
+		_machine_arch="aarch64c"
+		_cheribsdtarget="cheribsd-morello-purecap"
+		_cheribuildtargets="sdk-morello-purecap"
+		_set="benchmarkabi"
+		;;
 	riscv64)
 		_machine="riscv64"
+		_machine_arch="${_abi}"
 		_cheribsdtarget="cheribsd-riscv64"
 		_cheribuildtargets="sdk-riscv64"
 		_set="hybridabi"
 		;;
 	riscv64c)
 		_machine="riscv64"
+		_machine_arch="${_abi}"
 		_cheribsdtarget="cheribsd-riscv64-purecap"
 		_cheribuildtargets="sdk-riscv64-purecap"
 		_set="cheriabi"
@@ -668,7 +682,7 @@ _build_local() {
 	*)
 		die "Unexpected ABI ${_abi}."
 	esac
-	_rootfs="${_rootfsprefix}/${_abi}"
+	_rootfs="${_rootfsprefix}/${_machine_arch}"
 	_cheribuildflags="${_cheribuildflags} \
 	    --clean \
 	    --no-skip-sdk \
@@ -678,7 +692,7 @@ _build_local() {
 	    --${_cheribsdtarget}/install-directory ${_rootfs}"
 	_jailname="${_abi}-${REMOTE_CHERIBSD_JAILSUFFIX}"
 
-	init_local "${_machine}" "${_abi}" "${_rootfs}"
+	init_local "${_abi}" "${_machine}" "${_machine_arch}" "${_rootfs}" \
 	    "${_cheribuildflags}" "${_cheribuildtargets}" "${_jailname}" \
 	    "${_set}"
 
