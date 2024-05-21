@@ -49,7 +49,7 @@ aarch64-binutils
 autoconf
 automake
 bash
-cmake
+cmake-core
 git
 glib
 gmake
@@ -60,6 +60,7 @@ ninja
 pixman
 pkgconf
 python3
+rsync
 texinfo
 "
 
