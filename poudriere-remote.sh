@@ -157,6 +157,7 @@ Mutually exclusive parameters:
 
 Options:
     -b os-branch        -- Branch name for OS userland.
+    -c cheribuild-flags -- Custom flags to pass to cheribuild.
     -d disk             -- Use disk to create a ZFS zpool for data.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
@@ -494,6 +495,7 @@ build_options() {
 
 	_abi=""
 	_all=0
+	_cheribuildflags=""
 	_cheribuildupdate=0
 	_disk=""
 	_dryrun=0
@@ -505,7 +507,7 @@ build_options() {
 	_verbose=0
 	_zpool=""
 
-	while getopts "a:b:d:f:h:np:t:UVv:" _arg; do
+	while getopts "a:b:c:d:f:h:np:t:UVv:" _arg; do
 		case "${_arg}" in
 		A)
 			_all=1
@@ -516,6 +518,9 @@ build_options() {
 			;;
 		b)
 			_os_branch="${OPTARG}"
+			;;
+		c)
+			_cheribuildflags="${OPTARG}"
 			;;
 		d)
 			_disk="${OPTARG}"
@@ -661,7 +666,6 @@ _build_local() {
 	build_options local "${@}"
 
 	_rootfsprefix="${REMOTE_PATH_OUTPUT_REPOS_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}"
-	_cheribuildflags=""
 	case "${_abi}" in
 	aarch64)
 		_machine="arm64"
@@ -707,8 +711,6 @@ _build_local() {
 	esac
 	_rootfs="${_rootfsprefix}/${_machine_arch}"
 	_cheribuildflags="${_cheribuildflags} \
-	    --clean \
-	    --no-skip-sdk \
 	    --qemu/no-use-smbd \
 	    --cheribsd/with-manpages \
 	    --cheribsd/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
