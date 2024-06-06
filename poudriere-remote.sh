@@ -285,16 +285,13 @@ init() {
 	dircreate "${REMOTE_PATH_REPOS}"
 	dircreate "${REMOTE_PATH_CHERIBSD}"
 	dircreate "${REMOTE_PATH_CHERIBSD_BRANCH}"
+	dircreate "${REMOTE_PATH_CHERIBSDPORTS_BRANCH}"
 	dircreate "${REMOTE_PATH_POUDRIERE}"
 	dircreate "${REMOTE_PATH_POUDRIEREBASE}"
 	dircreate "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 
-	if sshcmd sudo pkg query %o = devel/git >/dev/null; then
-		debug "Using previously installed devel/git."
-	else
-		info "Installing devel/git."
-		check sshcmd sudo pkg install -qy devel/git
-	fi
+	info "Updating dependency packages."
+	check sshcmd sudo pkg install -qy ${REMOTE_DEPS}
 
 	check rsynccmd "${LOCAL_PATH_POUDRIEREINFRASTRUCTURE}/" \
 	    "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}/"
@@ -340,9 +337,6 @@ init_local() {
 	if [ $? -ne 0 ]; then
 		die "Unable to get a host machine architecture."
 	fi
-
-	info "Updating dependency packages."
-	check sudo pkg install -qy ${REMOTE_DEPS}
 
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
 		info "Rebuilding bsd-user-qemu."
