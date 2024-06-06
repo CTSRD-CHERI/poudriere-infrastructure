@@ -247,7 +247,7 @@ dircreate() {
 
 	[ -n "${_dir}" ] || die "Missing _dir."
 
-	if [ -n "${REMOTE_DISK}" ]; then
+	if [ -n "${REMOTE_ZPOOL}" ]; then
 		_filesystem="${_dir#/}"
 		if sshcmd zfs list -H -t filesystem -o name \
 		    "${_filesystem}" >/dev/null 2>&1; then
