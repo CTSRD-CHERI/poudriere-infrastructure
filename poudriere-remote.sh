@@ -501,7 +501,7 @@ build_options() {
 	_verbose=0
 	_zpool=""
 
-	while getopts "a:b:c:d:f:h:np:t:UVv:" _arg; do
+	while getopts "a:b:c:d:f:h:np:t:UVv:z:" _arg; do
 		case "${_arg}" in
 		A)
 			_all=1
