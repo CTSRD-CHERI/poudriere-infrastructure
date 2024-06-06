@@ -138,6 +138,13 @@ Usage: ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branc
        ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -F file [-F file2 ...]
        ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version origin [origin2 ...]
 
+Examples:
+    Bootstrap a Poudriere environment and build ports-mgmt/pkg:
+      ${0} build -h my-host -a aarch64c -v dev
+
+    Build the GUI stack for CheriABI on Arm Morello:
+      ${0} build -h my-host -a aarch64c -v dev x11/cheri-desktop
+
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
     -a abi              -- ABI to build packages for (aarch64, aarch64c, aarch64cb, riscv64 or riscv64c).
