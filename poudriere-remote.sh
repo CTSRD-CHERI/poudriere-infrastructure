@@ -76,6 +76,8 @@ REMOTE_PATH_REPOS="/nonexisting"
 REMOTE_PATH_CHERIBUILD="/nonexisting"
 REMOTE_PATH_CHERIBSD="/nonexisting"
 REMOTE_PATH_CHERIBSD_BRANCH="/nonexisting"
+REMOTE_PATH_CHERIBSDPORTS="/nonexisting"
+REMOTE_PATH_CHERIBSDPORTS_BRANCH="/nonexisting"
 REMOTE_PATH_POUDRIERE="/nonexisting"
 REMOTE_PATH_POUDRIEREBASE="/nonexisting"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="/nonexisting"
@@ -309,6 +311,10 @@ init() {
 	    "${REMOTE_CHERIBSD_REPO}" \
 	    "${REMOTE_CHERIBSD_BRANCH}" \
 	    "${REMOTE_PATH_CHERIBSD_BRANCH}"
+	check gitclonecmd "cheribsd-ports" \
+	    "${REMOTE_CHERIBSDPORTS_REPO}" \
+	    "${REMOTE_CHERIBSDPORTS_BRANCH}" \
+	    "${REMOTE_PATH_CHERIBSDPORTS_BRANCH}"
 }
 
 init_local() {
@@ -405,10 +411,9 @@ init_local() {
 		debug "Using a previously created ports tree with a name ${REMOTE_CHERIBSDPORTS_TREENAME}."
 	else
 		info "Creating a ports tree with a name ${REMOTE_CHERIBSDPORTS_TREENAME}."
-		check poudrierecmd ports -c -m git \
-		    -p "${REMOTE_CHERIBSDPORTS_TREENAME}" \
-		    -U "${REMOTE_CHERIBSDPORTS_REPO}" \
-		    -B "${REMOTE_CHERIBSDPORTS_BRANCH}"
+		check poudrierecmd ports -c -m null \
+		    -M "${REMOTE_PATH_CHERIBSDPORTS_BRANCH}" \
+		    -p "${REMOTE_CHERIBSDPORTS_TREENAME}"
 	fi
 
 	if [ -f "${_cheribuildstatus}" ]; then
@@ -669,6 +674,8 @@ build_options() {
 	REMOTE_PATH_CHERIBUILD="${REMOTE_PATH_REPOS}/cheribuild"
 	REMOTE_PATH_CHERIBSD="${REMOTE_PATH_REPOS}/cheribsd"
 	REMOTE_PATH_CHERIBSD_BRANCH="${REMOTE_PATH_CHERIBSD}/${REMOTE_CHERIBSD_BRANCH}"
+	REMOTE_PATH_CHERIBSDPORTS="${REMOTE_PATH_REPOS}/cheribsd-ports"
+	REMOTE_PATH_CHERIBSDPORTS_BRANCH="${REMOTE_PATH_CHERIBSDPORTS}/${REMOTE_CHERIBSDPORTS_BRANCH}"
 	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_REPOS}/poudriere"
 	REMOTE_PATH_POUDRIEREBASE="${REMOTE_PATH_ZDATA}/poudriere"
 	LOCAL_PATH_POUDRIEREINFRASTRUCTURE="$(dirname "$(realpath "${0}")")"
