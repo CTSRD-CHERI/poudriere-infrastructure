@@ -442,16 +442,6 @@ init_local() {
 	check touch "${_cheribuildstatus}"
 
 	info "Copying jail files."
-	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
-	    find zdata/ -type f -o -type l)
-	if [ $? -ne 0 ] || [ -z "${_files}" ]; then
-		die "Unable to list files in ${REMOTE_PATH_POUDRIEREBASE}."
-	fi
-	for _file in ${_files}; do
-		check sudo mkdir -p "$(dirname "/${_file}")"
-		check sudo rm -f "/${_file}"
-		check sudo cp -a "${REMOTE_PATH_OVERLAY}/${_file}" "/${_file}"
-	done
 	_files=$(cd "${REMOTE_PATH_OVERLAY}/rootfs/${_machine_arch}" &&
 	    find . -type f -o -type l)
 	for _file in ${_files}; do
