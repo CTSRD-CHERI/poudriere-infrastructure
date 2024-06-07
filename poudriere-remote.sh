@@ -133,10 +133,10 @@ die() {
 
 usage() {
 cat << EOF >&2
-Usage: ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version
-       ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -A
-       ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -F file [-F file2 ...]
-       ${0} build [-nUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version origin [origin2 ...]
+Usage: ${0} build [-nCUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version
+       ${0} build [-nCUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -A
+       ${0} build [-nCUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version -F file [-F file2 ...]
+       ${0} build [-nCUV] [-d disk] [-z zpool] [-c cheribuild-flags] [-b os-branch] [-p ports-branch] -h host -a abi -v version origin [origin2 ...]
 
 Examples:
     Bootstrap a Poudriere environment and build ports-mgmt/pkg:
@@ -156,6 +156,7 @@ Mutually exclusive parameters:
     origin              -- Build a port matching origin.
 
 Options:
+    -C cheri-path       -- Absolute cheribuild source root directory path.
     -b os-branch        -- Branch name for OS userland.
     -c cheribuild-flags -- Custom flags to pass to cheribuild.
     -d disk             -- Use disk to create a ZFS zpool for data.
@@ -496,7 +497,7 @@ init_local() {
 }
 
 build_options() {
-	local _arg _os_branch _error _origin _ports_branch _side
+	local _arg _cheribuildroot _os_branch _error _origin _ports_branch _side
 
 	_side="${1}"
 	shift
@@ -506,6 +507,7 @@ build_options() {
 	_abi=""
 	_all=0
 	_cheribuildflags=""
+	_cheribuildroot=""
 	_cheribuildupdate=0
 	_disk=""
 	_dryrun=0
@@ -517,7 +519,7 @@ build_options() {
 	_verbose=0
 	_zpool=""
 
-	while getopts "a:b:c:d:f:h:np:t:UVv:z:" _arg; do
+	while getopts "a:b:c:C:d:f:h:np:t:UVv:z:" _arg; do
 		case "${_arg}" in
 		A)
 			_all=1
@@ -531,6 +533,9 @@ build_options() {
 			;;
 		c)
 			_cheribuildflags="${OPTARG}"
+			;;
+		C)
+			_cheribuildroot="${OPTARG}"
 			;;
 		d)
 			_disk="${OPTARG}"
@@ -650,7 +655,11 @@ build_options() {
 	if [ -n "${REMOTE_ZPOOL}" ]; then
 		REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
 	fi
-	REMOTE_PATH_CHERI="${REMOTE_PATH_ZDATA}/cheri"
+	if [ -n "${_cheribuildroot}" ]; then
+		REMOTE_PATH_CHERI="${_cheribuildroot}"
+	else
+		REMOTE_PATH_CHERI="${REMOTE_PATH_ZDATA}/cheri"
+	fi
 	REMOTE_PATH_OUTPUT="${REMOTE_PATH_CHERI}/output"
 	REMOTE_PATH_OUTPUT_REPOS="${REMOTE_PATH_OUTPUT}/repos"
 	REMOTE_PATH_OUTPUT_REPOS_CHERIBSD="${REMOTE_PATH_OUTPUT_REPOS}/cheribsd"
