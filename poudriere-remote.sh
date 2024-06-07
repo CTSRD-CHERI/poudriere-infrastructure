@@ -409,6 +409,9 @@ init_local() {
 		check sudo service qemu_user_static restart
 	fi
 
+	inf "Setting sysctl variables."
+	check sudo service sysctl start
+
 	info "Restarting nginx."
 	check sudo service nginx restart
 
