@@ -597,12 +597,9 @@ build_options() {
 	[ ${_all} -eq 1 ] && [ -n "${_files}" ] && usage
 	[ ${_all} -eq 1 ] && [ -n "${_origins}" ] && usage
 	[ -n "${_files}" ] && [ -n "${_origins}" ] && usage
-	# _disk is optional.
-	# _dryrun is optional.
 	[ -n "${_host}" ] || usage
 	[ -n "${_abi}" ] || usage
 	[ -n "${_version}" ] || usage
-	# _verbose is optional.
 
 	REMOTE_DISK="${_disk}"
 	REMOTE_DRYRUN="${_dryrun}"
