@@ -426,20 +426,20 @@ init_local() {
 		debug "Using previously built SDK for ${_machine_arch}."
 	else
 		info "Building SDK for for ${_machine_arch}."
-		if [ -d "${_rootfs}" ]; then
-			# Set the owner of rootfs to an unprivileged user in
-			# case we must update any already existing files (e.g.,
-			# when rootfs was partially created due to a bug that is
-			# fixed now).
-			#
-			# cheribuild creates files as the uprivileged user but
-			# we later change their owner to root:wheel as required
-			# by the base system.
-			check sudo chown -R "${REMOTE_USER}:wheel" "${_rootfs}"
-		fi
-		check cheribuildcmd ${_cheribuildflags} ${_cheribuildtargets}
-		check touch "${_cheribuildstatus}"
 	fi
+	if [ -d "${_rootfs}" ]; then
+		# Set the owner of rootfs to an unprivileged user in
+		# case we must update any already existing files (e.g.,
+		# when rootfs was partially created due to a bug that is
+		# fixed now).
+		#
+		# cheribuild creates files as the uprivileged user but
+		# we later change their owner to root:wheel as required
+		# by the base system.
+		check sudo chown -R "${REMOTE_USER}:wheel" "${_rootfs}"
+	fi
+	check cheribuildcmd ${_cheribuildflags} ${_cheribuildtargets}
+	check touch "${_cheribuildstatus}"
 
 	info "Copying jail files."
 	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
