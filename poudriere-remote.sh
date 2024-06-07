@@ -242,7 +242,7 @@ rsynccmd() {
 	[ -n "${_remote_path}" ] || die "Missing _remote_path"
 
 	info "Updating the remote directory '${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}' with the local directory '${LOCAL_PATH_POUDRIEREINFRASTRUCTURE}'."
-	check rsync -az "${_local_path}" --exclude .git \
+	check rsync -az "${_local_path}" --exclude .git --delete \
 	    "${REMOTE_HOST}:${_remote_path}"
 }
 
