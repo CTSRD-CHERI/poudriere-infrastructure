@@ -148,6 +148,12 @@ Examples:
     Build the GUI stack for CheriABI on Arm Morello:
       ${0} build -h my-host -a aarch64c -v dev x11/cheri-desktop
 
+    Bootstrap a Poudriere environment using a new zdisk zpool created on the disk0 disk:
+      ${0} build -d disk0 -z zdisk -h my-host -a aarch64c -v dev
+
+    Bootstrap a Poudriere environment using an existing zroot zpool:
+      ${0} build -z zroot -h my-host -a aarch64c -v dev
+
 Parameters:
     -h host             -- Host to build packages on (ssh(1) destination).
     -a abi              -- ABI to build packages for (aarch64, aarch64c, aarch64cb, riscv64 or riscv64c).
