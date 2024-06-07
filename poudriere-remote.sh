@@ -706,7 +706,8 @@ _build_local() {
 		_cheribsdtarget="cheribsd-aarch64"
 		# Build a hybrid SDK to build devel/gdb-cheri in an aarch64
 		# jail.
-		_cheribuildflags="--enable-hybrid-targets \
+		_cheribuildflags="${_cheribuildflags} \
+		    --enable-hybrid-targets \
 		    --cheribsd-morello-hybrid/install-directory ${_rootfsprefix}/aarch64-hybrid"
 		_cheribuildtargets="sdk-aarch64 sdk-morello-hybrid"
 		_set="hybridabi"
