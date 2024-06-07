@@ -341,6 +341,18 @@ init_local() {
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
 		info "Rebuilding bsd-user-qemu."
 		check cheribuildcmd bsd-user-qemu
+		check sudo ln -sf \
+		    "${REMOTE_PATH_OUTPUT}/bsd-user-sdk/bin/qemu-aarch64" \
+		    "/usr/local/bin/qemu-aarch64-static"
+		check sudo ln -sf \
+		    "${REMOTE_PATH_OUTPUT}/bsd-user-sdk/bin/qemu-morello" \
+		    "/usr/local/bin/qemu-aarch64c-static"
+		check sudo ln -sf \
+		    "${REMOTE_PATH_OUTPUT}/bsd-user-sdk/bin/qemu-riscv64" \
+		"/usr/local/bin/qemu-riscv64-static"
+		check sudo ln -sf \
+		    "${REMOTE_PATH_OUTPUT}/bsd-user-sdk/bin/qemu-riscv64cheri" \
+		    "/usr/local/bin/qemu-riscv64c-static"
 	fi
 
 	info "Rebuilding poudriere."
@@ -373,6 +385,10 @@ init_local() {
 	fi
 	check sudo sed -i '' "s@%%ZDATA%%@${REMOTE_PATH_ZDATA}@" \
 	    /usr/local/etc/poudriere.conf
+	check sudo sed -i '' "s@%%ZDATA%%@${REMOTE_PATH_ZDATA}@" \
+	    /usr/local/etc/poudriere.d/hooks/jail.sh
+	check sudo sed -i '' "s@%%ZDATA%%@${REMOTE_PATH_ZDATA}@" \
+	    /usr/local/etc/nginx/nginx.conf
 
 	if [ "${_host_machine_arch}" != "${_machine_arch}" ]; then
 		info "Reconfiguring binary image activators."

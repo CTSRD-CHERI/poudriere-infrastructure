@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SYSROOT_MORELLO_HYBRID="/zdata/cheri/output/morello-sdk/sysroot-morello-hybrid"
+SYSROOT_MORELLO_HYBRID="%%ZDATA%%/cheri/output/morello-sdk/sysroot-morello-hybrid"
 
 event="${1}"
 
