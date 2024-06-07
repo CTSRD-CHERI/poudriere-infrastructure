@@ -687,11 +687,12 @@ build_options() {
 }
 
 _build_local() {
-	local _abi _all _disk _dryrun _files _host _origins _verbose
-	local _zpool
-	local _cheribsdtarget _cheribuildflags _cheribuildtargets
-	local _cheribuildstatus _flags _jailname _machine _machine_arch
-	local _rootfs _set
+	# Variables for script arguments:
+	local _abi _all _cheribuildflags _disk _dryrun _files _host _origins
+	local _verbose _zpool
+	# Other variables:
+	local _cheribsdtarget _cheribuildtargets _cheribuildstatus _flags
+	local _jailname _machine _machine_arch _rootfs _set
 
 	build_options local "${@}"
 
