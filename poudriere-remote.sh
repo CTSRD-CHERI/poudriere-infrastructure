@@ -326,6 +326,7 @@ init() {
 init_local() {
 	local _cheribuildflags _cheribuildtargets _cheribuildstatus _file _files
 	local _host_machine_arch _jailname _machine _machine_arch _rootfs _set
+	local _targetfile
 
 	_abi="${1}"
 	_machine="${2}"
@@ -376,6 +377,12 @@ init_local() {
 	if [ $? -ne 0 ]; then
 		die "Unable to rebuild Poudriere."
 	fi
+
+	for _file in "${REMOTE_PATH_POUDRIERE}"/src/etc/poudriere.d/*-make.conf.sample; do
+		_targetfile=$(basename "${_file}")
+		_targetfile=${_targetfile%.sample}
+		check sudo cp "${_file}" "/usr/local/etc/poudriere.d/${_targetfile}"
+	done
 
 	info "Copying configuration files."
 	_files=$(cd "${REMOTE_PATH_OVERLAY}" &&
