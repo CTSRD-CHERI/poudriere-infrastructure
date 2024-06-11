@@ -737,6 +737,7 @@ _build_local() {
 	_rootfs="${_rootfsprefix}/${_machine_arch}"
 	_cheribuildflags="${_cheribuildflags} \
 	    --qemu/no-use-smbd \
+	    --skip-kernel \
 	    --cheribsd/with-manpages \
 	    --cheribsd/source-directory ${REMOTE_PATH_CHERIBSD_BRANCH} \
 	    --${_cheribsdtarget}/install-directory ${_rootfs}"
