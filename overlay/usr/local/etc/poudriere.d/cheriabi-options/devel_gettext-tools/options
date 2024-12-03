@@ -1,1 +1,2 @@
-CONFIGURE_ARGS+=	--without-xz
+CONFIGURE_ARGS+=	--without-xz --without-git
+ARCHIVE_SUFX=	.tar.bz2
