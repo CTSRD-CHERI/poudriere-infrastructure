@@ -627,10 +627,12 @@ build_options() {
 	if [ "${REMOTE_VERBOSE}" -ge 2 ]; then
 		set -x
 	fi
+	if [ -n "${_poudriere_branch}" ]; then
+		REMOTE_POUDRIERE_BRANCH="${_poudriere_branch}"
+	fi
 	REMOTE_CHERIBUILD_UPDATE="${_cheribuildupdate}"
 	REMOTE_CHERIBSD_BRANCH="${_os_branch}"
 	REMOTE_CHERIBSDPORTS_BRANCH="${_ports_branch}"
-	REMOTE_POUDRIERE_BRANCH="${_poudriere_branch}"
 	case "${_version}" in
 	dev|main|[0-9][0-9].[0-9][0-9])
 		REMOTE_CHERIBSD_VERSION="${_version}"
