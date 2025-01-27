@@ -79,6 +79,7 @@ REMOTE_PATH_CHERIBSD_BRANCH="/nonexisting"
 REMOTE_PATH_CHERIBSDPORTS="/nonexisting"
 REMOTE_PATH_CHERIBSDPORTS_BRANCH="/nonexisting"
 REMOTE_PATH_POUDRIERE="/nonexisting"
+REMOTE_PATH_POUDRIERE_BRANCH="/nonexisting"
 REMOTE_PATH_POUDRIEREBASE="/nonexisting"
 REMOTE_PATH_POUDRIEREINFRASTRUCTURE="/nonexisting"
 REMOTE_PATH_OVERLAY="/nonexisting"
@@ -169,6 +170,7 @@ Options:
     -b os-branch        -- Branch name for OS userland.
     -c cheribuild-flags -- Custom flags to pass to cheribuild.
     -d disk             -- Use disk to create a ZFS zpool for data.
+    -e poudriere-branch -- Branch name for Poudriere.
     -n                  -- Print commands instead of executing them.
                            Results depend on already executed commands without -n.
     -p ports-branch     -- Branch name for ports.
@@ -247,7 +249,7 @@ rsynccmd() {
 }
 
 poudrierecmd() {
-	sudo "${REMOTE_PATH_POUDRIERE}/poudriere" "${@}"
+	sudo "${REMOTE_PATH_POUDRIERE_BRANCH}/poudriere" "${@}"
 }
 
 dircreate() {
@@ -296,7 +298,7 @@ init() {
 	dircreate "${REMOTE_PATH_CHERIBSD}"
 	dircreate "${REMOTE_PATH_CHERIBSD_BRANCH}"
 	dircreate "${REMOTE_PATH_CHERIBSDPORTS_BRANCH}"
-	dircreate "${REMOTE_PATH_POUDRIERE}"
+	dircreate "${REMOTE_PATH_POUDRIERE_BRANCH}"
 	dircreate "${REMOTE_PATH_POUDRIEREBASE}"
 	dircreate "${REMOTE_PATH_POUDRIEREINFRASTRUCTURE}"
 
@@ -308,7 +310,7 @@ init() {
 	check gitclonecmd "poudriere" \
 	    "${REMOTE_POUDRIERE_REPO}" \
 	    "${REMOTE_POUDRIERE_BRANCH}" \
-	    "${REMOTE_PATH_POUDRIERE}"
+	    "${REMOTE_PATH_POUDRIERE_BRANCH}"
 	check gitclonecmd "cheribuild" \
 	    "${REMOTE_CHERIBUILD_REPO}" \
 	    "${REMOTE_CHERIBUILD_BRANCH}" \
@@ -371,14 +373,14 @@ init_local() {
 	fi
 
 	info "Rebuilding poudriere."
-	(cd "${REMOTE_PATH_POUDRIERE}" &&
+	(cd "${REMOTE_PATH_POUDRIERE_BRANCH}" &&
 	    check ./configure &&
 	    check make)
 	if [ $? -ne 0 ]; then
 		die "Unable to rebuild Poudriere."
 	fi
 
-	for _file in "${REMOTE_PATH_POUDRIERE}"/src/etc/poudriere.d/*-make.conf.sample; do
+	for _file in "${REMOTE_PATH_POUDRIERE_BRANCH}"/src/etc/poudriere.d/*-make.conf.sample; do
 		_targetfile=$(basename "${_file}")
 		_targetfile=${_targetfile%.sample}
 		check sudo cp "${_file}" "/usr/local/etc/poudriere.d/${_targetfile}"
@@ -509,7 +511,8 @@ init_local() {
 }
 
 build_options() {
-	local _arg _cheribuildroot _os_branch _error _origin _ports_branch _side
+	local _arg _cheribuildroot _os_branch _error _origin _ports_branch
+	local _poudriere_branch _side
 
 	_side="${1}"
 	shift
@@ -528,10 +531,11 @@ build_options() {
 	_host=""
 	_os_branch=""
 	_ports_branch=""
+	_poudriere_branch=""
 	_verbose=0
 	_zpool=""
 
-	while getopts "a:b:c:C:d:f:h:np:t:UVv:z:" _arg; do
+	while getopts "a:b:c:C:d:e:f:h:np:t:UVv:z:" _arg; do
 		case "${_arg}" in
 		A)
 			_all=1
@@ -551,6 +555,9 @@ build_options() {
 			;;
 		d)
 			_disk="${OPTARG}"
+			;;
+		e)
+			_poudriere_branch="${OPTARG}"
 			;;
 		F)
 			_files="${_files} -f '${OPTARG}'"
@@ -623,6 +630,7 @@ build_options() {
 	REMOTE_CHERIBUILD_UPDATE="${_cheribuildupdate}"
 	REMOTE_CHERIBSD_BRANCH="${_os_branch}"
 	REMOTE_CHERIBSDPORTS_BRANCH="${_ports_branch}"
+	REMOTE_POUDRIERE_BRANCH="${_poudriere_branch}"
 	case "${_version}" in
 	dev|main|[0-9][0-9].[0-9][0-9])
 		REMOTE_CHERIBSD_VERSION="${_version}"
@@ -680,6 +688,7 @@ build_options() {
 	REMOTE_PATH_CHERIBSDPORTS="${REMOTE_PATH_REPOS}/cheribsd-ports"
 	REMOTE_PATH_CHERIBSDPORTS_BRANCH="${REMOTE_PATH_CHERIBSDPORTS}/${REMOTE_CHERIBSDPORTS_BRANCH}"
 	REMOTE_PATH_POUDRIERE="${REMOTE_PATH_REPOS}/poudriere"
+	REMOTE_PATH_POUDRIERE_BRANCH="${REMOTE_PATH_POUDRIERE}/${REMOTE_POUDRIERE_BRANCH}"
 	REMOTE_PATH_POUDRIEREBASE="${REMOTE_PATH_ZDATA}/poudriere"
 	LOCAL_PATH_POUDRIEREINFRASTRUCTURE="$(dirname "$(realpath "${0}")")"
 	REMOTE_PATH_POUDRIEREINFRASTRUCTURE="${REMOTE_PATH_REPOS}/poudriere-infrastructure"
