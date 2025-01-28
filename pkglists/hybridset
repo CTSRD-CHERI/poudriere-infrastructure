@@ -12,6 +12,9 @@ textproc/py-docutils
 textproc/py-libxml2
 textproc/py-mako
 
+# Required by www/chromium (through security/boringssl)
+lang/go
+
 # Required by sysutils/u-boot-bhyve-arm64
 devel/aarch64-none-elf-gcc
 devel/py-setuptools-pkg
