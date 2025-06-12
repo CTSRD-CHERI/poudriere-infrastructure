@@ -1,47 +1,32 @@
 #
-# This file contains the list of packages requested for use with the
-# Morello architecture on CheriBSD.  It is broken down into two sections, 
-# a set of packages known to build and the set of requeested packages
-# that do not build as yet.
+# This file contains the list of packages that require replacement hybrid
+# packages for dependencies and that cannot be built when building all packages
+# with `poudriere bulk -a`.
 #
-# This file is meant to be used with the -f argument to poudriere bulk
-#
-# The current list of requested packages is maintained on 
-# https://github.com/CTSRD-CHERI/poudriere-infrastructure/wiki/Package-backlog
+# This file is meant to be used with the -f argument to `poudriere bulk`.
 #
 
-# Currently Working Packages 17 March 2022 <- Keep this current!
+# Graphical stack (seatd, SDDM, KDE Plasma, and applications)
+x11/cheri-desktop
 
-devel/cscope
-graphics/libdrm
-graphics/mesa-dri
-lang/perl5.32
-ports-mgmt/pkg
-security/sudo
-shells/bash
-sysutils/seatd
-x11-toolkits/wlroots
-x11-wm/sway
+# Type 2 hypervisor support (bhyve)
+sysutils/cheri-vm-support
 
-# Non Working Packages
-# The following ports should be moved to the working list once 
-# they are proved to be working.
+# Chromium dependencies
+accessibility/at-spi2-core
+accessibility/atkmm
+devel/jsoncpp
+devel/nspr
+graphics/cairo
+graphics/webp
+multimedia/dav1d
+print/harfbuzz
+security/boringssl
+security/nss
+security/nss
+x11-fonts/noto-basic
+x11-toolkits/gtk30
+x11-toolkits/pango
 
-# devel/bison
-# devel/cmake
-# devel/gh
-# devel/git
-# devel/git-lfs
-# devel/ninja
-# devel/pkgconf
-# devel/swig
-# editors/vim
-# graphics/ImageMagick7-nox11
-# misc/cloc
-# net/nss_ldap
-# new/rsync
-# net/samba413
-# security/gnupg
-# sysutils/tmux
-# textproc/jq
-# www/lynx
+# ffmpeg
+multimedia/ffmpeg
