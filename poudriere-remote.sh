@@ -53,6 +53,7 @@ cmake-core
 git
 glib
 gmake
+gmp
 gsed
 libtool
 nginx
@@ -62,6 +63,7 @@ pkgconf
 python3
 rsync
 texinfo
+tmux
 "
 
 # Remote zpool.
