@@ -84,7 +84,7 @@ main() {
 	[ -d "${_repo_path}" ] || usage
 	[ -n "${_remote_path}" ] || usage
 
-	pkg repo "${_repo_path}" signing_command: ssh pkg-sign
+	pkg repo "${_repo_path}" signing_command: /usr/bin/ssh pkg-sign
 	if [ $? -ne 0 ]; then
 		die "Unable to create a repository."
 	fi
