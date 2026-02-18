@@ -89,7 +89,7 @@ main() {
 		die "Unable to create a repository."
 	fi
 
-	sha256 -q "${_repo_path}/Latest/pkg.pkg" |
+	sha256sum "${_repo_path}/Latest/pkg.pkg" | awk '{print $1}' |
 	    ssh pkg-sign >"${_repo_path}/Latest/pkg.pkg.sig"
 	if [ $? -ne 0 ]; then
 		die "Unable to sign pkg."
