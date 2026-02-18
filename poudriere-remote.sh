@@ -384,6 +384,7 @@ init_local() {
 		die "Unable to rebuild Poudriere."
 	fi
 
+	check sudo mkdir -p /usr/local/etc/poudriere.d
 	for _file in "${REMOTE_PATH_POUDRIERE_BRANCH}"/src/etc/poudriere.d/*-make.conf.sample; do
 		_targetfile=$(basename "${_file}")
 		_targetfile=${_targetfile%.sample}
