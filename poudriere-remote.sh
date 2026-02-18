@@ -262,12 +262,14 @@ dircreate() {
 	[ -n "${_dir}" ] || die "Missing _dir."
 
 	if [ -n "${REMOTE_ZPOOL}" ]; then
-		_filesystem="${_dir#/}"
+		_filesystem="${REMOTE_ZPOOL}${_dir}"
 		if sshcmd zfs list -H -t filesystem -o name \
 		    "${_filesystem}" >/dev/null 2>&1; then
 			debug "Using a previously created filesystem ${_filesystem}."
 		else
-			check sshcmd sudo zfs create -p "${_filesystem}"
+			check sshcmd sudo zfs create -p \
+			    -o mountpoint="${_dir}" \
+			    "${_filesystem}"
 		fi
 	else
 		if sshcmd ls -d "${_dir}" >/dev/null 2>&1; then
@@ -673,9 +675,6 @@ build_options() {
 	REMOTE_CHERIBSDPORTS_TREENAME="$(echo "${REMOTE_CHERIBSDPORTS_TREENAME}" |
 	    tr '/.-' '_')"
 	REMOTE_ZPOOL="${_zpool}"
-	if [ -n "${REMOTE_ZPOOL}" ]; then
-		REMOTE_PATH_ZDATA="/${REMOTE_ZPOOL}"
-	fi
 	if [ -n "${_cheribuildroot}" ]; then
 		REMOTE_PATH_CHERI="${_cheribuildroot}"
 	else
