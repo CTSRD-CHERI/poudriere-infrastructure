@@ -13,6 +13,7 @@ x11/cheri-desktop
 sysutils/cheri-vm-support
 
 # Chromium dependencies
+# Run-time:
 accessibility/at-spi2-core
 accessibility/atkmm
 devel/jsoncpp
@@ -27,6 +28,8 @@ security/nss
 x11-fonts/noto-basic
 x11-toolkits/gtk30
 x11-toolkits/pango
+# Build-time:
+devel/xdg-utils
 
 # ffmpeg
 multimedia/ffmpeg
