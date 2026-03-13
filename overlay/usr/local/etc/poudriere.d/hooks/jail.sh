@@ -9,7 +9,9 @@ mount)
 	mntpath="${2}"
 
 	# Mount directories with host libraries.
-	mkdir -p "${mntpath}/host/lib" "${mntpath}/host/usr/lib" "${mntpath}/host/usr/local/lib"
+	mkdir -p "${mntpath}/host/bin" "${mntpath}/host/usr/bin" "${mntpath}/host/lib" "${mntpath}/host/usr/lib" "${mntpath}/host/usr/local/lib"
+	mount -r -t nullfs /bin "${mntpath}/host/bin"
+	mount -r -t nullfs /usr/bin "${mntpath}/host/usr/bin"
 	mount -r -t nullfs /lib "${mntpath}/host/lib"
 	mount -r -t nullfs /usr/lib "${mntpath}/host/usr/lib"
 	mount -r -t nullfs /usr/local/lib "${mntpath}/host/usr/local/lib"
