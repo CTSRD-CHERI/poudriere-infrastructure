@@ -14,20 +14,7 @@ sysutils/cheri-vm-support
 
 # Chromium dependencies
 # Run-time:
-accessibility/at-spi2-core
-accessibility/atkmm
-devel/jsoncpp
-devel/nspr
-graphics/cairo
-graphics/webp
-multimedia/dav1d
-print/harfbuzz
-security/boringssl
-security/nss
-security/nss
-x11-fonts/noto-basic
-x11-toolkits/gtk30
-x11-toolkits/pango
+www/chromium-deps
 # Build-time:
 devel/xdg-utils
 
