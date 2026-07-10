@@ -1,1 +1,2 @@
 vm.imply_prot_max=0
+kern.signosys=0
