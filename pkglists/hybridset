@@ -19,3 +19,6 @@ lang/go
 devel/aarch64-none-elf-gcc
 devel/py-setuptools-pkg
 sysutils/dtc
+
+# Required by lang/php83
+devel/re2c

@@ -1,9 +1,15 @@
 #
-# This file contains the list of packages that require replacement hybrid
-# packages for dependencies and that cannot be built when building all packages
-# with `poudriere bulk -a`.
+# This file contains the list of ports that are compiled to aarch64c and:
+# * Require replacement hybrid packages for dependencies, in which case they
+# cannot be built when building all packages with `poudriere bulk -a`;
+# * Do not require replacement hybrid packages for dependencies but are crucial
+# and should always be built for CheriBSD releases.
 #
 # This file is meant to be used with the -f argument to `poudriere bulk`.
+#
+
+#
+# Ports requiring hybrid packages
 #
 
 # Graphical stack (seatd, SDDM, KDE Plasma, and applications)
@@ -20,3 +26,27 @@ devel/xdg-utils
 
 # ffmpeg
 multimedia/ffmpeg
+
+#
+# Ports crucial to CheriBSD releases
+#
+
+databases/sqlite3
+devel/autoconf
+devel/cheritree
+devel/gdb-cheri-purecap
+devel/git
+devel/gmake
+devel/pkgconf
+editors/nano
+lang/php83
+lang/php83-extensions
+net/rsync31
+ports-mgmt/pkg
+security/kernel-c18n
+security/sudo
+shells/bash
+sysutils/cheribsd-update
+sysutils/screen
+sysutils/tmux
+www/nginx-cheri

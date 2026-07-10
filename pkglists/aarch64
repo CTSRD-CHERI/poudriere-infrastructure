@@ -1,0 +1,22 @@
+#
+# This file contains the list of ports that are compiled to aarch64 and should
+# always be built for CheriBSD releases.
+#
+# This file is meant to be used with the -f argument to `poudriere bulk`.
+#
+
+devel/cmake-core
+devel/gdb-meta
+devel/ghidra-meta
+devel/llvm-base
+devel/llvm-morello-c18n
+devel/llvm-morello-c18n-cpm-2026h1
+devel/meson
+devel/ninja
+editors/vim
+emulators/qemu-cheri
+lang/python3
+security/gef-meta
+sysutils/screen
+sysutils/tmux
+x11/cheri-desktop-hybrid-extras
