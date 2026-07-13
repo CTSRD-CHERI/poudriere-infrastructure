@@ -61,6 +61,7 @@ ninja
 pixman
 pkgconf
 python3
+py312-setuptools
 rsync
 texinfo
 tmux
