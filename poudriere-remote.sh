@@ -452,7 +452,8 @@ init_local() {
 			debug "Using previously copied guest ld-${_machine_arch}-elf.so.1."
 		else
 			info "Copying guest ld-elf.so.1 to ld-${_machine_arch}-elf.so.1."
-			check mv "${_rootfs}/libexec/ld-elf.so.1" \
+			check sudo chflags noschg "${_rootfs}/libexec/ld-elf.so.1"
+			check sudo mv "${_rootfs}/libexec/ld-elf.so.1" \
 			    "${_rootfs}/libexec/ld-${_machine_arch}-elf.so.1"
 		fi
 		if [ -f "${_rootfs}/libexec/ld-elf.so.1" ]; then
