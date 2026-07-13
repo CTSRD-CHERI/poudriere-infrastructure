@@ -1,13 +1,12 @@
 diff --git a/libexec/rtld-elf/rtld_paths.h b/libexec/rtld-elf/rtld_paths.h
-index c051db7b58..6b99da99b3 100644
+index c305b166c0b2..8189b4bf0290 100644
 --- a/libexec/rtld-elf/rtld_paths.h
 +++ b/libexec/rtld-elf/rtld_paths.h
-@@ -49,7 +49,7 @@
- #endif
+@@ -28,6 +28,7 @@
+ #define _RTLD_PATHS_H
  
- #ifndef _PATH_ELF_HINTS
--#define	_PATH_ELF_HINTS		"/var/run/ld-elf.so.hints"
-+#define	_PATH_ELF_HINTS		"/var/run/ld-elf-host.so.hints"
- #endif
+ #undef _PATH_ELF_HINTS
++#define	_PATH_ELF_HINTS	"/var/run/ld-elf-host.so.hints"
  
- #ifndef _PATH_LIBMAP_CONF
+ #ifndef _RTLD_COMPAT_LIB_SUFFIX
+ #ifdef COMPAT_libcompat
